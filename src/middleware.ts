@@ -1,38 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createHmac, timingSafeEqual } from "crypto";
 import { SESSION_COOKIE } from "@/lib/constants";
+import { readSessionToken } from "@/lib/session-token";
 
-const SECRET =
-  process.env.SESSION_SECRET ?? "srudc-local-demo-secret-change-in-production";
-
-type TokenPayload = {
-  sub: string;
-  role: "member" | "admin";
-  exp: number;
-};
-
-function readToken(token: string): TokenPayload | null {
-  const [body, sig] = token.split(".");
-  if (!body || !sig) return null;
-  const expected = createHmac("sha256", SECRET).update(body).digest("base64url");
-  const left = Buffer.from(sig);
-  const right = Buffer.from(expected);
-  if (left.length !== right.length || !timingSafeEqual(left, right)) return null;
-  try {
-    const payload = JSON.parse(
-      Buffer.from(body, "base64url").toString("utf8"),
-    ) as TokenPayload;
-    if (payload.exp < Date.now()) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const session = token ? readToken(token) : null;
+  const session = token ? await readSessionToken(token) : null;
 
   if (pathname.startsWith("/banking")) {
     if (!session || session.role !== "member") {
