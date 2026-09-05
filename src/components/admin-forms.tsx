@@ -106,73 +106,90 @@ export function EditMemberForm({ user }: { user: PublicUser }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <Label htmlFor="firstName">First name</Label>
-          <Input
+          <input
             id="firstName"
             name="firstName"
             defaultValue={user.firstName}
-            className="h-10"
-            required
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
           />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="lastName">Last name</Label>
-          <Input
+          <input
             id="lastName"
             name="lastName"
             defaultValue={user.lastName}
-            className="h-10"
-            required
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
           />
         </div>
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="email">Email</Label>
-        <Input
+        <input
           id="email"
           name="email"
           type="email"
           defaultValue={user.email}
-          className="h-10"
-          required
+          className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
         />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" defaultValue={user.phone} className="h-10" />
+          <input
+            id="phone"
+            name="phone"
+            defaultValue={user.phone}
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+          />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="dateOfBirth">Date of birth</Label>
-          <Input
+          <input
             id="dateOfBirth"
             name="dateOfBirth"
             type="date"
             defaultValue={user.dateOfBirth}
-            className="h-10"
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
           />
         </div>
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="address">Street address</Label>
-        <Input
+        <input
           id="address"
           name="address"
           defaultValue={user.address}
-          className="h-10"
+          className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
         />
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-1.5">
           <Label htmlFor="city">City</Label>
-          <Input id="city" name="city" defaultValue={user.city} className="h-10" />
+          <input
+            id="city"
+            name="city"
+            defaultValue={user.city}
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+          />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="state">State</Label>
-          <Input id="state" name="state" defaultValue={user.state} className="h-10" />
+          <input
+            id="state"
+            name="state"
+            defaultValue={user.state}
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+          />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="zip">ZIP</Label>
-          <Input id="zip" name="zip" defaultValue={user.zip} className="h-10" />
+          <input
+            id="zip"
+            name="zip"
+            defaultValue={user.zip}
+            className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
+          />
         </div>
       </div>
       <div className="grid gap-1.5">
@@ -188,9 +205,12 @@ export function EditMemberForm({ user }: { user: PublicUser }) {
           <option value="closed">Closed</option>
         </select>
       </div>
-      <FormButton className="h-10 w-fit bg-[#0B2340] text-white hover:bg-[#08182C]">
+      <button
+        type="submit"
+        className="inline-flex h-10 w-fit items-center justify-center rounded-lg bg-[#0B2340] px-4 text-sm font-medium text-white hover:bg-[#08182C]"
+      >
         Save member information
-      </FormButton>
+      </button>
     </form>
   );
 }
@@ -253,27 +273,29 @@ export function AdjustBalanceForm({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="amount">Amount</Label>
-            <Input
+            <input
               id="amount"
               name="amount"
               inputMode="decimal"
               placeholder="0.00"
-              className="h-10"
-              required
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="description">Memo</Label>
-            <Input
+            <input
               id="description"
               name="description"
               placeholder="Correction, courtesy credit, hold release…"
-              className="h-10"
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
             />
           </div>
-          <FormButton className="h-10 bg-[#0B2340] text-white hover:bg-[#08182C]">
+          <button
+            type="submit"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-[#0B2340] px-4 text-sm font-medium text-white hover:bg-[#08182C]"
+          >
             Post adjustment
-          </FormButton>
+          </button>
         </form>
       </DialogContent>
     </Dialog>
