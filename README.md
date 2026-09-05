@@ -2,16 +2,50 @@
 
 Online banking and operations console for **Southern Ridge Union De' Creditos** (Southern Ridge UDC). Members sign in to E-Banking to review balances, move money, and update contact details. Officers use the admin desk to change member records and post balance adjustments.
 
-Member data is stored in a local JSON ledger at `data/bank.json`. No external database is required.
+This is a normal Node.js / Next.js app. It runs on **Windows**, macOS, and Linux. No database server is required. Member records are stored in `data/bank.json` on the machine that runs the app.
 
-## Run locally
+Private repo: [https://cursor.com/codebase/imisi-adenuga/bank-ops](https://cursor.com/codebase/imisi-adenuga/bank-ops)
 
-```bash
-npm install
-npm run dev
+## Open on Windows
+
+You need [Node.js LTS](https://nodejs.org) (20 or newer). The installer adds `node` and `npm` to PATH. Restart Cursor or your terminal after installing.
+
+### Option A — folder already on your PC
+
+1. Open the project folder in File Explorer or Cursor (**File → Open Folder**).
+2. Double-click `START-WINDOWS.bat`.
+3. The first run installs packages, then opens [http://127.0.0.1:43147](http://127.0.0.1:43147).
+
+Or in PowerShell, from inside the project folder:
+
+```powershell
+.\setup-windows.ps1
 ```
 
-The app listens on [http://127.0.0.1:43147](http://127.0.0.1:43147).
+If PowerShell blocks the script:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+.\setup-windows.ps1
+```
+
+### Option B — get the repo onto this PC
+
+From the repo page, use **Open in Cursor**. That clones `imisi-adenuga/bank-ops` and opens it. Then run `START-WINDOWS.bat`.
+
+To clone with Git for Windows, open the repo page, copy the clone URL shown there, then in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\Documents\bank-ops"
+cd "$env:USERPROFILE\Documents"
+git clone <paste-the-clone-url> bank-ops
+```
+
+You can also clone in WSL with the [Origin CLI](https://cursor.com/docs/origin/cli).
+
+### Option C — zip
+
+Extract the project zip into `Documents\bank-ops`, then double-click `START-WINDOWS.bat`.
 
 ## Demo sign-in
 
@@ -20,7 +54,7 @@ The app listens on [http://127.0.0.1:43147](http://127.0.0.1:43147).
 | E-Banking | `maria.okonkwo@email.com` | `RidgeMember26` |
 | Operations console | `admin@southernridgeudc.com` | `RidgeAdmin26` |
 
-Other seeded members (`james.whitfield@email.com`, `amina.cole@email.com`) use `RidgeMember26`. Amina’s membership starts frozen so you can see a restricted member in the admin desk.
+On the login screens you can click **Fill demo credentials**. Other seeded members (`james.whitfield@email.com`, `amina.cole@email.com`) use `RidgeMember26`. Amina’s membership starts frozen.
 
 ## What you can do
 
@@ -43,4 +77,4 @@ Other seeded members (`james.whitfield@email.com`, `amina.cole@email.com`) use `
 
 ## Notes
 
-This is a local demonstration system. Do not use it as a production bank, and do not store real customer credentials here. Set `SESSION_SECRET` in `.env.local` if you deploy it beyond this machine.
+This is a local demonstration system. Do not store real customer credentials here. Set `SESSION_SECRET` in `.env.local` if you deploy it beyond this machine.
