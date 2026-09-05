@@ -45,7 +45,7 @@ You can also clone in WSL with the [Origin CLI](https://cursor.com/docs/origin/c
 
 ### Option C — zip
 
-Extract the project zip into `Documents\bank-ops`, then double-click `START-WINDOWS.bat`.
+Extract the project zip into `Documents\bank-ops`. If Cursor says it failed to checkout the branch because the folder is not a git repository, double-click `INIT-GIT-WINDOWS.bat` first. Then open that folder in Cursor and run `START-WINDOWS.bat`.
 
 ## Demo sign-in
 
@@ -74,6 +74,10 @@ On the login screens you can click **Fill demo credentials**. Other seeded membe
 - Open additional checking, savings, or business accounts
 - Reset a member password
 - Create a new member from the desk
+
+## If Cursor says “not a git repository”
+
+The folder you opened has the source files but no `.git` directory (common after extracting a zip). Close that window, run `INIT-GIT-WINDOWS.bat` in the extracted folder, then **File → Open Folder** on the same folder.
 
 ## Notes
 

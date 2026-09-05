@@ -2,6 +2,15 @@
 setlocal
 cd /d "%~dp0"
 
+if not exist ".git\" (
+  echo This folder is not a git repository yet.
+  echo Cursor needs a .git folder to open the project branch.
+  echo.
+  if exist "INIT-GIT-WINDOWS.bat" (
+    call "INIT-GIT-WINDOWS.bat" nopause
+  )
+)
+
 where node >nul 2>nul
 if errorlevel 1 (
   echo Node.js is not installed or not on PATH.
