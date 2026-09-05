@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useId, useState } from "react";
+import { useActionState, useId, useRef } from "react";
 import { loginAction, registerAction } from "@/lib/actions/auth";
 import { FormButton } from "@/components/form-button";
 import { StatusBanner } from "@/components/status-banner";
@@ -17,8 +17,7 @@ function Field({
   type = "text",
   autoComplete,
   placeholder,
-  value,
-  onChange,
+  inputRef,
 }: {
   id: string;
   label: string;
@@ -26,8 +25,7 @@ function Field({
   type?: string;
   autoComplete?: string;
   placeholder?: string;
-  value?: string;
-  onChange?: (value: string) => void;
+  inputRef?: React.Ref<HTMLInputElement>;
 }) {
   return (
     <div className="grid gap-1.5">
@@ -36,12 +34,11 @@ function Field({
       </label>
       <input
         id={id}
+        ref={inputRef}
         name={name}
         type={type}
         autoComplete={autoComplete}
         placeholder={placeholder}
-        value={value}
-        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
         className={fieldClass}
       />
     </div>
@@ -57,8 +54,8 @@ export function LoginForm({
   const demo = role === "admin" ? DEMO_ADMIN : DEMO_MEMBER;
   const emailId = useId();
   const passwordId = useId();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   return (
     <form action={action} className="grid gap-4" noValidate>
@@ -71,8 +68,7 @@ export function LoginForm({
         type="email"
         autoComplete="username"
         placeholder={demo.email}
-        value={email}
-        onChange={setEmail}
+        inputRef={emailRef}
       />
       <Field
         id={passwordId}
@@ -80,8 +76,7 @@ export function LoginForm({
         name="password"
         type="password"
         autoComplete="current-password"
-        value={password}
-        onChange={setPassword}
+        inputRef={passwordRef}
       />
       <button
         type="submit"
@@ -100,8 +95,8 @@ export function LoginForm({
           type="button"
           className="mt-2 font-medium text-[#2F7A45] underline-offset-2 hover:underline"
           onClick={() => {
-            setEmail(demo.email);
-            setPassword(demo.password);
+            if (emailRef.current) emailRef.current.value = demo.email;
+            if (passwordRef.current) passwordRef.current.value = demo.password;
           }}
         >
           Fill demo credentials
