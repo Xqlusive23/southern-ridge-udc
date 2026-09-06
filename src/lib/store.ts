@@ -1,8 +1,7 @@
 import "server-only";
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import path from "path";
-import { BANK_NAME, BANK_ROUTING, BANK_SHORT, DEMO_ADMIN, DEMO_MEMBER } from "@/lib/constants";
+import { BANK_NAME, BANK_ROUTING, BANK_SHORT, DEMO_ADMIN } from "@/lib/constants";
+import { loadPersistedJson, savePersistedJson } from "@/lib/persist";
 import {
   enqueueTransactionMail,
   extractEmail,
@@ -32,15 +31,26 @@ import type {
   User,
 } from "@/lib/types";
 
-const DATA_DIR = process.env.VERCEL
-  ? path.join("/tmp", "southern-ridge-udc")
-  : path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "bank.json");
-
 let writeChain: Promise<unknown> = Promise.resolve();
+let cache: BankStore | null = null;
+let hydrate: Promise<void> | null = null;
+let dirty = false;
+let persistBlocked = false;
 
 function withLock<T>(fn: () => T): Promise<T> {
-  const run = writeChain.then(fn, fn);
+  const run = writeChain.then(async () => {
+    cache = null;
+    hydrate = null;
+    persistBlocked = false;
+    dirty = false;
+    await hydrateStore();
+    const result = fn();
+    if (cache && dirty && !persistBlocked) {
+      await savePersistedJson(JSON.stringify(cache, null, 2));
+      dirty = false;
+    }
+    return result;
+  });
   writeChain = run.then(
     () => undefined,
     () => undefined,
@@ -295,298 +305,78 @@ function syncPrimaryContact(user: User, contact: MemberContact) {
 }
 
 function seedStore(): BankStore {
-  const usedNumbers = new Set<string>();
-  const adminId = "admin-elena-vasquez";
-  const mariaId = "member-maria-okonkwo";
-  const jamesId = "member-james-whitfield";
-  const aminaId = "member-amina-cole";
-
-  const users: User[] = [
-    {
-      id: adminId,
-      role: "admin",
-      email: DEMO_ADMIN.email,
-      passwordHash: hashPassword(DEMO_ADMIN.password),
-      firstName: "Elena",
-      lastName: "Vasquez",
-      phone: "(404) 555-0148",
-      address: "120 Ridge Plaza",
-      city: "Savannah",
-      state: "GA",
-      zip: "31401",
-      dateOfBirth: "1984-03-12",
-      status: "active",
-      transferPinHash: null,
-      defaultOutgoingStatus: "pending",
-      preferredContact: "email",
-      contacts: [],
-      createdAt: daysAgo(420, 9),
-      lastLoginAt: null,
-      readNotificationIds: [],
-      photoPath: null,
-    },
-    {
-      id: mariaId,
-      role: "member",
-      email: DEMO_MEMBER.email,
-      passwordHash: hashPassword(DEMO_MEMBER.password),
-      firstName: "Maria",
-      lastName: "Okonkwo",
-      phone: "(912) 555-0194",
-      address: "48 Magnolia Court",
-      city: "Savannah",
-      state: "GA",
-      zip: "31405",
-      dateOfBirth: "1991-07-22",
-      status: "active",
-      transferPinHash: hashPassword("2468"),
-      defaultOutgoingStatus: "pending",
-      preferredContact: "mobile",
-      contacts: [],
-      createdAt: daysAgo(210, 11),
-      lastLoginAt: daysAgo(1, 8),
-      readNotificationIds: [],
-      photoPath: null,
-    },
-    {
-      id: jamesId,
-      role: "member",
-      email: "james.whitfield@email.com",
-      passwordHash: hashPassword(DEMO_MEMBER.password),
-      firstName: "James",
-      lastName: "Whitfield",
-      phone: "(706) 555-0172",
-      address: "901 Broad Street",
-      city: "Augusta",
-      state: "GA",
-      zip: "30901",
-      dateOfBirth: "1978-11-03",
-      status: "active",
-      transferPinHash: hashPassword("2468"),
-      defaultOutgoingStatus: "pending",
-      preferredContact: "work",
-      contacts: [],
-      createdAt: daysAgo(140, 14),
-      lastLoginAt: daysAgo(4, 16),
-      readNotificationIds: [],
-      photoPath: null,
-    },
-    {
-      id: aminaId,
-      role: "member",
-      email: "amina.cole@email.com",
-      passwordHash: hashPassword(DEMO_MEMBER.password),
-      firstName: "Amina",
-      lastName: "Cole",
-      phone: "(229) 555-0133",
-      address: "17 Peachtree Walk",
-      city: "Albany",
-      state: "GA",
-      zip: "31701",
-      dateOfBirth: "1996-02-18",
-      status: "frozen",
-      transferPinHash: null,
-      defaultOutgoingStatus: "pending",
-      preferredContact: "email",
-      contacts: [],
-      createdAt: daysAgo(38, 10),
-      lastLoginAt: daysAgo(12, 19),
-      readNotificationIds: [],
-      photoPath: null,
-    },
-  ];
-
-  for (const user of users) {
-    user.contacts = contactsFromProfile(user);
-  }
-
-  const accounts: Account[] = [
-    {
-      id: "acct-maria-checking",
-      userId: mariaId,
-      type: "checking",
-      name: "Everyday Checking",
-      accountNumber: generateAccountNumber(usedNumbers),
-      routingNumber: BANK_ROUTING,
-      balanceCents: 425040,
-      status: "active",
-      openedAt: daysAgo(210, 11),
-    },
-    {
-      id: "acct-maria-savings",
-      userId: mariaId,
-      type: "savings",
-      name: "Ridge Savings",
-      accountNumber: generateAccountNumber(usedNumbers),
-      routingNumber: BANK_ROUTING,
-      balanceCents: 1289000,
-      status: "active",
-      openedAt: daysAgo(200, 13),
-    },
-    {
-      id: "acct-james-checking",
-      userId: jamesId,
-      type: "checking",
-      name: "Everyday Checking",
-      accountNumber: generateAccountNumber(usedNumbers),
-      routingNumber: BANK_ROUTING,
-      balanceCents: 110218,
-      status: "active",
-      openedAt: daysAgo(140, 14),
-    },
-    {
-      id: "acct-james-business",
-      userId: jamesId,
-      type: "business",
-      name: "Whitfield Provisions",
-      accountNumber: generateAccountNumber(usedNumbers),
-      routingNumber: BANK_ROUTING,
-      balanceCents: 2845000,
-      status: "active",
-      openedAt: daysAgo(130, 9),
-    },
-    {
-      id: "acct-amina-checking",
-      userId: aminaId,
-      type: "checking",
-      name: "Everyday Checking",
-      accountNumber: generateAccountNumber(usedNumbers),
-      routingNumber: BANK_ROUTING,
-      balanceCents: 89055,
-      status: "frozen",
-      openedAt: daysAgo(38, 10),
-    },
-    {
-      id: "acct-amina-savings",
-      userId: aminaId,
-      type: "savings",
-      name: "Ridge Savings",
-      accountNumber: generateAccountNumber(usedNumbers),
-      routingNumber: BANK_ROUTING,
-      balanceCents: 320000,
-      status: "frozen",
-      openedAt: daysAgo(38, 10),
-    },
-  ];
-
-  const tx = (
-    accountId: string,
-    type: TransactionType,
-    amountCents: number,
-    balanceAfterCents: number,
-    description: string,
-    createdAt: string,
-    counterparty: string | null = null,
-  ): Transaction => ({
-    id: createId(),
-    accountId,
-    type,
-    amountCents,
-    balanceAfterCents,
-    description,
-    counterparty,
-    createdAt,
-    createdBy: "system",
-    status: "completed",
-    transferId: null,
-  });
-
-  const transactions: Transaction[] = [
-    tx(
-      "acct-maria-checking",
-      "credit",
-      245000,
-      425040,
-      "Payroll — Harbor Clinic",
-      daysAgo(2, 7),
-      "Harbor Clinic",
-    ),
-    tx(
-      "acct-maria-checking",
-      "debit",
-      -6840,
-      180040,
-      "Kroger #441",
-      daysAgo(3, 18),
-      "Kroger",
-    ),
-    tx(
-      "acct-maria-checking",
-      "debit",
-      -12800,
-      186880,
-      "Georgia Power",
-      daysAgo(5, 6),
-      "Georgia Power",
-    ),
-    tx(
-      "acct-maria-savings",
-      "credit",
-      25000,
-      1289000,
-      "Transfer from Everyday Checking",
-      daysAgo(8, 12),
-      "Everyday Checking",
-    ),
-    tx(
-      "acct-james-business",
-      "credit",
-      186500,
-      2845000,
-      "Invoice 1842 — Coastal Grocers",
-      daysAgo(1, 15),
-      "Coastal Grocers",
-    ),
-    tx(
-      "acct-james-checking",
-      "debit",
-      -4200,
-      110218,
-      "Shell Oil",
-      daysAgo(2, 17),
-      "Shell",
-    ),
-    tx(
-      "acct-amina-checking",
-      "debit",
-      -2200,
-      89055,
-      "Savannah Transit",
-      daysAgo(12, 9),
-      "Savannah Transit",
-    ),
-  ];
-
-  const seeded: BankStore = {
-    users,
-    accounts,
+  const admin: User = {
+    id: "admin-elena-vasquez",
+    role: "admin",
+    email: DEMO_ADMIN.email,
+    passwordHash: hashPassword(DEMO_ADMIN.password),
+    firstName: "Elena",
+    lastName: "Vasquez",
+    phone: "(404) 555-0148",
+    address: "120 Ridge Plaza",
+    city: "Savannah",
+    state: "GA",
+    zip: "31401",
+    dateOfBirth: "1984-03-12",
+    status: "active",
+    transferPinHash: null,
+    defaultOutgoingStatus: "pending",
+    preferredContact: "email",
+    contacts: [],
+    createdAt: daysAgo(420, 9),
+    lastLoginAt: null,
+    readNotificationIds: [],
+    photoPath: null,
+  };
+  admin.contacts = contactsFromProfile(admin);
+  return {
+    users: [admin],
+    accounts: [],
     cards: [],
-    transactions,
+    transactions: [],
     transfers: [],
     loans: [],
     settings: defaultSettings(),
   };
-  ensureAccountCards(seeded);
-  return seeded;
 }
 
-function ensureStore() {
-  if (!existsSync(DATA_DIR)) {
-    mkdirSync(DATA_DIR, { recursive: true });
+async function hydrateStore() {
+  if (cache) return;
+  if (!hydrate) {
+    hydrate = (async () => {
+      try {
+        const loaded = await loadPersistedJson();
+        if (loaded.status === "loaded") {
+          try {
+            cache = normalizeStore(JSON.parse(loaded.json) as Partial<BankStore>);
+          } catch {
+            throw new Error(
+              "The membership ledger could not be read. Please try again in a moment.",
+            );
+          }
+          persistBlocked = !loaded.durable;
+          return;
+        }
+        if (loaded.status === "unavailable") {
+          throw new Error(
+            "The membership ledger is temporarily unavailable. Please try again in a moment.",
+          );
+        }
+        cache = seedStore();
+        persistBlocked = false;
+        dirty = true;
+      } catch (error) {
+        hydrate = null;
+        throw error;
+      }
+    })();
   }
-  if (!existsSync(DATA_FILE)) {
-    writeFileSync(DATA_FILE, JSON.stringify(seedStore(), null, 2));
-  }
+  await hydrate;
 }
 
 function readStore(): BankStore {
-  ensureStore();
-  const raw = JSON.parse(readFileSync(DATA_FILE, "utf8")) as Partial<BankStore>;
-  const store = normalizeStore(raw);
-  if (storeNeedsMigration(raw)) {
-    writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
-  }
-  return store;
+  if (!cache) throw new Error("Bank store is not ready.");
+  return cache;
 }
 
 function recordTransaction(
@@ -628,8 +418,8 @@ function recordTransaction(
 }
 
 function writeStore(store: BankStore) {
-  ensureStore();
-  writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
+  cache = store;
+  dirty = true;
   flushTransactionMail();
 }
 

@@ -78,10 +78,13 @@ export function mailTransportOptions(settings: BankSettings) {
 export function friendlyMailError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   if (/535|BadCredentials|Username and Password not accepted/i.test(message)) {
-    return "Gmail rejected the login. Use the full Gmail address as the username and a 16-character App Password (Google Account → Security → 2-Step Verification → App passwords). A normal Gmail password will not work. Paste the app password without spaces.";
+    return "SMTP rejected the login. For Resend, username is resend and the password is your API key (starts with re_). For Gmail, use the full Gmail address and a 16-character App Password with no spaces.";
   }
   if (/534|Application-specific password/i.test(message)) {
     return "Gmail requires an App Password. Turn on 2-Step Verification, then create an App Password for Mail.";
+  }
+  if (/not verified|domain.*not|550|553|5\.7\.1|sender.*not allowed/i.test(message)) {
+    return "Resend rejected the from-address. Verify southernridgeudc.org in Resend and send from an address on that domain, such as noreply@southernridgeudc.org.";
   }
   return message;
 }
@@ -155,10 +158,16 @@ async function deliverHtmlEmail(
     );
   }
   const transporter = createTransporter(options);
-  const headerAddress = options.from || options.user;
+  const headerAddress = extractEmail(options.from) || extractEmail(options.user);
+  if (!headerAddress) {
+    throw new Error(
+      "Set SMTP from address to a mailbox on your verified domain, such as noreply@southernridgeudc.org.",
+    );
+  }
+  const fallbackAddress = extractEmail(options.user);
   const attempts = [{ name: input.fromName, address: headerAddress }];
-  if (options.user && !sameAddress(headerAddress, options.user)) {
-    attempts.push({ name: input.fromName, address: options.user });
+  if (fallbackAddress && !sameAddress(headerAddress, fallbackAddress)) {
+    attempts.push({ name: input.fromName, address: fallbackAddress });
   }
 
   let lastError: unknown;
@@ -166,9 +175,7 @@ async function deliverHtmlEmail(
     try {
       await transporter.sendMail({
         from,
-        envelope: options.user
-          ? { from: options.user, to: input.to }
-          : undefined,
+        envelope: { from: headerAddress, to: input.to },
         to: input.to,
         subject: input.subject,
         text: input.text,

@@ -7,20 +7,30 @@ import { getPublicUserById, getUserByEmail, recordLogin } from "@/lib/store";
 import { verifyPassword } from "@/lib/passwords";
 import type { Role, SessionUser } from "@/lib/types";
 
+function sessionCookieBase() {
+  return {
+    httpOnly: true as const,
+    sameSite: "lax" as const,
+    path: "/",
+    secure: process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL),
+  };
+}
+
+async function writeSessionCookie(value: string, maxAge: number) {
+  const jar = await cookies();
+  jar.set(SESSION_COOKIE, value, {
+    ...sessionCookieBase(),
+    maxAge,
+  });
+}
+
 export async function createSession(userId: string, role: Role) {
   const token = await signSessionToken({
     sub: userId,
     role,
     exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000,
   });
-  const jar = await cookies();
-  jar.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: SESSION_DAYS * 24 * 60 * 60,
-  });
+  await writeSessionCookie(token, SESSION_DAYS * 24 * 60 * 60);
 }
 
 export async function clearSession() {
@@ -33,17 +43,28 @@ export async function getSession(): Promise<SessionUser | null> {
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const payload = await readSessionToken(token);
-  if (!payload) return null;
-  const user = await getPublicUserById(payload.sub);
-  if (!user) return null;
-  return {
-    id: user.id,
-    role: user.role,
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    status: user.status,
-  };
+  if (!payload) {
+    await clearSession();
+    return null;
+  }
+  try {
+    const user = await getPublicUserById(payload.sub);
+    if (!user) {
+      await clearSession();
+      return null;
+    }
+    return {
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      status: user.status,
+    };
+  } catch (error) {
+    console.error("Session user lookup failed", error);
+    return null;
+  }
 }
 
 export async function requireSession(role?: Role) {
@@ -73,6 +94,10 @@ export async function authenticate(email: string, password: string) {
       error: "This membership is banned. Login access has been restricted.",
     };
   }
-  await recordLogin(user.id);
+  try {
+    await recordLogin(user.id);
+  } catch (error) {
+    console.error("Login timestamp could not be saved", error);
+  }
   return { user };
 }

@@ -274,6 +274,7 @@ export async function adminCreateMemberAction(
       state: String(formData.get("state") ?? ""),
       zip: String(formData.get("zip") ?? ""),
       dateOfBirth: String(formData.get("dateOfBirth") ?? ""),
+      status: "active",
     });
   } catch (err) {
     return {

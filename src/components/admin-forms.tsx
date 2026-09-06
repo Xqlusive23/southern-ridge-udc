@@ -813,9 +813,10 @@ export function AdminPreferencesForm({
             <h2 className="font-semibold text-[#0B2340]">Support email</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Recipients see the bank name only, with a structured receipt and
-              the receiving bank mark. The SMTP username stays hidden. For
-              Gmail: host smtp.gmail.com, username is the full Gmail address,
-              and the password must be a 16-character App Password.
+              the receiving bank mark. For Resend: host smtp.resend.com, port
+              465, username resend, password is the API key, and the from
+              address must be on your verified domain. Vercel environment
+              variables override these fields when they are set.
               {mailReady ? " Mail is configured." : " Mail is not configured yet."}
             </p>
           </div>
@@ -843,7 +844,7 @@ export function AdminPreferencesForm({
                 onChange={(event) =>
                   setMailFields((current) => ({ ...current, smtpHost: event.target.value }))
                 }
-                placeholder="smtp.gmail.com"
+                placeholder="smtp.resend.com"
                 className="h-10"
               />
             </div>
@@ -882,7 +883,7 @@ export function AdminPreferencesForm({
                 placeholder={
                   settings.smtpPassword
                     ? "Saved — leave blank to keep"
-                    : "Gmail App Password, no spaces"
+                    : "Resend API key, starts with re_"
                 }
               />
             </div>

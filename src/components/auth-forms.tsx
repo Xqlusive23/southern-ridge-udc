@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useId, useRef } from "react";
+import { useActionState, useId } from "react";
 import { loginAction, registerAction } from "@/lib/actions/auth";
 import { FormButton } from "@/components/form-button";
 import { StatusBanner } from "@/components/status-banner";
-import { DEMO_ADMIN, DEMO_MEMBER } from "@/lib/constants";
 
 const fieldClass =
   "h-10 w-full rounded-lg border border-input bg-white px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
@@ -17,7 +16,6 @@ function Field({
   type = "text",
   autoComplete,
   placeholder,
-  inputRef,
 }: {
   id: string;
   label: string;
@@ -25,7 +23,6 @@ function Field({
   type?: string;
   autoComplete?: string;
   placeholder?: string;
-  inputRef?: React.Ref<HTMLInputElement>;
 }) {
   return (
     <div className="grid gap-1.5">
@@ -34,7 +31,6 @@ function Field({
       </label>
       <input
         id={id}
-        ref={inputRef}
         name={name}
         type={type}
         autoComplete={autoComplete}
@@ -51,11 +47,8 @@ export function LoginForm({
   role?: "member" | "admin";
 }) {
   const [state, action] = useActionState(loginAction, null);
-  const demo = role === "admin" ? DEMO_ADMIN : DEMO_MEMBER;
   const emailId = useId();
   const passwordId = useId();
-  const emailRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
 
   return (
     <form action={action} className="grid gap-4" noValidate>
@@ -67,8 +60,7 @@ export function LoginForm({
         name="email"
         type="email"
         autoComplete="username"
-        placeholder={role === "member" ? "example@gmail.com" : demo.email}
-        inputRef={emailRef}
+        placeholder="example@gmail.com"
       />
       <Field
         id={passwordId}
@@ -76,7 +68,6 @@ export function LoginForm({
         name="password"
         type="password"
         autoComplete="current-password"
-        inputRef={passwordRef}
       />
       <button
         type="submit"
@@ -84,24 +75,6 @@ export function LoginForm({
       >
         {role === "admin" ? "Enter operations console" : "Sign in to E-Banking"}
       </button>
-      <div className="rounded-lg bg-[#F4F7F5] px-3 py-3 text-xs leading-5 text-[#3E4A44]">
-        <p className="font-medium text-[#0B2340]">Demo sign-in</p>
-        <p className="mt-1">
-          {demo.email}
-          <br />
-          {demo.password}
-        </p>
-        <button
-          type="button"
-          className="mt-2 font-medium text-[#2F7A45] underline-offset-2 hover:underline"
-          onClick={() => {
-            if (emailRef.current) emailRef.current.value = demo.email;
-            if (passwordRef.current) passwordRef.current.value = demo.password;
-          }}
-        >
-          Fill demo credentials
-        </button>
-      </div>
       {role === "member" ? (
         <p className="text-center text-sm text-muted-foreground">
           New to the credit union?{" "}

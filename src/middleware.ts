@@ -3,6 +3,20 @@ import { SESSION_COOKIE } from "@/lib/constants";
 import { readSessionToken } from "@/lib/session-token";
 
 export async function middleware(request: NextRequest) {
+  const host = (
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    ""
+  )
+    .split(":")[0]
+    .toLowerCase();
+  if (host === "www.southernridgeudc.org") {
+    const url = request.nextUrl.clone();
+    url.hostname = "southernridgeudc.org";
+    url.protocol = "https";
+    return NextResponse.redirect(url, 308);
+  }
+
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const session = token ? await readSessionToken(token) : null;
@@ -24,16 +38,9 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname === "/login" && session?.role === "member") {
-    return NextResponse.redirect(new URL("/banking", request.url));
-  }
-  if (pathname === "/admin/login" && session?.role === "admin") {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/banking/:path*", "/admin/:path*", "/login"],
+  matcher: ["/banking", "/banking/:path*", "/admin/:path*", "/login"],
 };

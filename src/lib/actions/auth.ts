@@ -9,41 +9,66 @@ function required(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
+function passwordValue(formData: FormData) {
+  return String(formData.get("password") ?? "");
+}
+
+function isNextRedirect(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    String((error as { digest?: unknown }).digest).startsWith("NEXT_REDIRECT")
+  );
+}
+
 export async function loginAction(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
   const email = required(formData, "email");
-  const password = required(formData, "password");
+  const password = passwordValue(formData);
   const expectedRole = required(formData, "role") || "member";
 
   if (!email || !password) {
     return { ok: false, error: "Enter your email and password." };
   }
 
-  const result = await authenticate(email, password);
-  if ("error" in result) return { ok: false, error: result.error };
+  try {
+    const result = await authenticate(email, password);
+    if ("error" in result) return { ok: false, error: result.error };
 
-  if (expectedRole === "admin" && result.user.role !== "admin") {
-    return { ok: false, error: "This portal is reserved for operations staff." };
-  }
-  if (expectedRole === "member" && result.user.role !== "member") {
-    return { ok: false, error: "Staff should sign in through the operations console." };
-  }
-  if (result.user.status === "pending" && result.user.role === "member") {
+    if (expectedRole === "admin" && result.user.role !== "admin") {
+      return { ok: false, error: "This portal is reserved for operations staff." };
+    }
+    if (expectedRole === "member" && result.user.role !== "member") {
+      return { ok: false, error: "Staff should sign in through the operations console." };
+    }
+    if (result.user.status === "pending" && result.user.role === "member") {
+      return {
+        ok: false,
+        error:
+          "This membership is waiting for operations approval. You can sign in after a branch officer activates it.",
+      };
+    }
+    if (result.user.status === "frozen" && result.user.role === "member") {
+      await createSession(result.user.id, result.user.role);
+      redirect("/banking");
+    }
+
+    await createSession(result.user.id, result.user.role);
+    redirect(result.user.role === "admin" ? "/admin" : "/banking");
+  } catch (error) {
+    if (isNextRedirect(error)) throw error;
+    console.error("Login failed", error);
+    const message = error instanceof Error ? error.message : "";
     return {
       ok: false,
-      error:
-        "This membership is waiting for operations approval. You can sign in after a branch officer activates it.",
+      error: message.includes("ledger")
+        ? message
+        : "Sign-in could not be completed. Please try again in a moment.",
     };
   }
-  if (result.user.status === "frozen" && result.user.role === "member") {
-    await createSession(result.user.id, result.user.role);
-    redirect("/banking");
-  }
-
-  await createSession(result.user.id, result.user.role);
-  redirect(result.user.role === "admin" ? "/admin" : "/banking");
 }
 
 export async function registerAction(
@@ -53,7 +78,7 @@ export async function registerAction(
   const firstName = required(formData, "firstName");
   const lastName = required(formData, "lastName");
   const email = required(formData, "email");
-  const password = required(formData, "password");
+  const password = passwordValue(formData);
   const phone = required(formData, "phone");
   const address = required(formData, "address");
   const city = required(formData, "city");

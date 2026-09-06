@@ -47,14 +47,13 @@ You can also clone in WSL with the [Origin CLI](https://cursor.com/docs/origin/c
 
 Extract the project zip into `Documents\bank-ops`. If Cursor says it failed to checkout the branch because the folder is not a git repository, double-click `INIT-GIT-WINDOWS.bat` first. Then open that folder in Cursor and run `START-WINDOWS.bat`.
 
-## Demo sign-in
+## Officer sign-in
+
+The first store only includes the operations officer. Members are added from the admin desk or the public application form.
 
 | Portal | Email | Password |
 | --- | --- | --- |
-| E-Banking | `maria.okonkwo@email.com` | `RidgeMember26` |
 | Operations console | `admin@southernridgeudc.com` | `RidgeAdmin26` |
-
-On the login screens you can click **Fill demo credentials**. Other seeded members (`james.whitfield@email.com`, `amina.cole@email.com`) use `RidgeMember26`. Amina’s membership starts frozen.
 
 ## What you can do
 
