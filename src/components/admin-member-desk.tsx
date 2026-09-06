@@ -61,7 +61,7 @@ export function AdminMemberDesk({
           Freeze this membership, or set how new outgoing transfers start. Open
           transfers below can be moved to hold, pending, processing, or completed.
         </p>
-        <MemberDeskActions member={listed} showDelete={false} />
+        <MemberDeskActions member={listed} showDelete />
         {openTransfers.length > 0 ? (
           <div className="mt-5 grid gap-3 border-t border-[#f0eee8] pt-5">
             <h3 className="text-[11px] font-semibold tracking-[0.14em] text-[#8A938C] uppercase">
@@ -116,9 +116,12 @@ export function AdminMemberDesk({
         </TabsList>
       </div>
 
-      <TabsContent value="profile" className="rounded-2xl border border-[#e2ddd2] bg-white p-5 shadow-[0_1px_2px_rgba(11,35,64,0.04),0_8px_24px_rgba(11,35,64,0.04)] sm:p-6">
-        <h2 className="mb-4 font-semibold text-[#0B2340]">Member information</h2>
-        <EditMemberForm user={user} />
+      <TabsContent value="profile" className="grid gap-4">
+        <section className="rounded-2xl border border-[#e2ddd2] bg-white p-5 shadow-[0_1px_2px_rgba(11,35,64,0.04),0_8px_24px_rgba(11,35,64,0.04)] sm:p-6">
+          <h2 className="mb-4 font-semibold text-[#0B2340]">Member information</h2>
+          <EditMemberForm user={user} />
+        </section>
+        <DeleteMemberForm userId={user.id} lastName={user.lastName} />
       </TabsContent>
 
       <TabsContent value="contacts" className="rounded-2xl border border-[#e2ddd2] bg-white p-5 shadow-[0_1px_2px_rgba(11,35,64,0.04),0_8px_24px_rgba(11,35,64,0.04)] sm:p-6">

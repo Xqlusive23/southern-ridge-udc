@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { DeleteUserButton } from "@/components/admin-member-row";
 import { StatusPill } from "@/components/shared";
 import type { ListedMember } from "@/lib/admin-members";
 import { formatMoney } from "@/lib/money";
@@ -68,20 +69,24 @@ export function AdminMembersRoster({ members }: { members: ListedMember[] }) {
     <>
       <div className="grid gap-3 lg:hidden">
         {members.map((member) => (
-          <Link
+          <article
             key={member.id}
-            href={`/admin/members/${member.id}`}
-            className="flex min-w-0 items-start justify-between gap-3 rounded-2xl border border-[#e2ddd2] bg-white p-4 shadow-[0_1px_2px_rgba(11,35,64,0.04)] transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(11,35,64,0.08)]"
+            className="flex min-w-0 items-start justify-between gap-3 rounded-2xl border border-[#e2ddd2] bg-white p-4 shadow-[0_1px_2px_rgba(11,35,64,0.04)]"
           >
-            <MemberIdentity member={member} showCity linked={false} />
+            <Link
+              href={`/admin/members/${member.id}`}
+              className="min-w-0 flex-1"
+            >
+              <MemberIdentity member={member} showCity linked={false} />
+            </Link>
             <div className="flex min-w-0 shrink-0 flex-col items-end gap-2">
               <p className="text-sm font-semibold tabular-nums text-[#0B2340]">
                 {formatMoney(member.totalCents)}
               </p>
               <MemberStatus member={member} />
-              <ChevronRight className="size-4 text-[#8A938C]" />
+              <DeleteUserButton userId={member.id} />
             </div>
-          </Link>
+          </article>
         ))}
       </div>
 
@@ -113,13 +118,16 @@ export function AdminMembersRoster({ members }: { members: ListedMember[] }) {
                   {formatMoney(member.totalCents)}
                 </td>
                 <td className="px-5 py-4 text-right">
-                  <Link
-                    href={`/admin/members/${member.id}`}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-[#2F7A45] underline-offset-4 hover:underline"
-                  >
-                    Open
-                    <ChevronRight className="size-4" />
-                  </Link>
+                  <div className="flex items-center justify-end gap-3">
+                    <DeleteUserButton userId={member.id} />
+                    <Link
+                      href={`/admin/members/${member.id}`}
+                      className="inline-flex items-center gap-1 text-sm font-medium text-[#2F7A45] underline-offset-4 hover:underline"
+                    >
+                      Open
+                      <ChevronRight className="size-4" />
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}

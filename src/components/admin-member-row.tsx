@@ -179,3 +179,25 @@ export function MemberDeskActions({
     </form>
   );
 }
+
+export function DeleteUserButton({ userId }: { userId: string }) {
+  const [state, action] = useActionState(adminQuickMemberAction, null);
+  useToastResult(state);
+
+  return (
+    <form
+      action={action}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <input type="hidden" name="userId" value={userId} />
+      <button
+        type="submit"
+        name="choice"
+        value="delete"
+        className="h-8 rounded-md border border-red-200/80 px-2.5 text-xs font-medium text-red-700 transition-all duration-200 hover:bg-red-50 active:scale-[0.98]"
+      >
+        Delete
+      </button>
+    </form>
+  );
+}

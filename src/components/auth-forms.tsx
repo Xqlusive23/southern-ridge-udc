@@ -67,7 +67,7 @@ export function LoginForm({
         name="email"
         type="email"
         autoComplete="username"
-        placeholder={demo.email}
+        placeholder={role === "member" ? "example@gmail.com" : demo.email}
         inputRef={emailRef}
       />
       <Field
