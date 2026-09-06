@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
-import { AccountCard } from "@/components/shared";
+import { ChevronRight } from "lucide-react";
+import { BankingLink } from "@/components/banking-link";
+import { BankingScreen } from "@/components/banking-screen";
 import { requireSession } from "@/lib/auth";
-import { formatDate, formatMoney } from "@/lib/money";
+import { formatAccountType, formatDate, formatMoney } from "@/lib/money";
 import { getMemberBanking } from "@/lib/store";
 
 export default async function AccountsPage() {
@@ -11,44 +13,46 @@ export default async function AccountsPage() {
   if (!banking) redirect("/login");
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-[#0B2340]">Accounts</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Account and routing numbers for deposits and outgoing transfers.
-        </p>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {banking.accounts.map((account) => (
-          <AccountCard key={account.id} account={account} />
-        ))}
-      </div>
-      <div className="overflow-x-auto rounded-xl border bg-white">
-        <table className="w-full min-w-[36rem] text-left text-sm">
-          <thead className="border-b bg-[#F7F6F2] text-xs tracking-wide text-[#5C6B64] uppercase">
-            <tr>
-              <th className="px-4 py-3 font-medium">Account</th>
-              <th className="px-4 py-3 font-medium">Number</th>
-              <th className="px-4 py-3 font-medium">Routing</th>
-              <th className="px-4 py-3 font-medium">Opened</th>
-              <th className="px-4 py-3 font-medium text-right">Balance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {banking.accounts.map((account) => (
-              <tr key={account.id} className="border-b last:border-0">
-                <td className="px-4 py-3 font-medium">{account.name}</td>
-                <td className="px-4 py-3 tabular-nums">{account.accountNumber}</td>
-                <td className="px-4 py-3 tabular-nums">{account.routingNumber}</td>
-                <td className="px-4 py-3">{formatDate(account.openedAt)}</td>
-                <td className="px-4 py-3 text-right tabular-nums">
+    <BankingScreen
+      title="Accounts"
+      description="Open an account to review its balance, numbers, and posted activity."
+    >
+      <div className="grid gap-4">
+        {banking.accounts.map((account) => {
+          const activity = banking.transactions.filter(
+            (item) => item.accountId === account.id,
+          ).length;
+          return (
+            <BankingLink
+              key={account.id}
+              href={`/banking/accounts/${account.id}`}
+              className="block rounded-[1.4rem] bg-[#16382B] px-5 py-5 text-white shadow-[0_16px_36px_rgba(8,24,20,0.16)] transition-transform duration-300 hover:-translate-y-0.5"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] tracking-[0.16em] text-white/55 uppercase">
+                    {formatAccountType(account.type)}
+                  </p>
+                  <p className="mt-1 text-lg font-semibold">{account.name}</p>
+                </div>
+                <p className="text-right text-2xl font-semibold tabular-nums">
                   {formatMoney(account.balanceCents)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </p>
+              </div>
+              <div className="mt-6 flex items-end justify-between text-sm text-white/70">
+                <div>
+                  <p className="tabular-nums">{account.accountNumber}</p>
+                  <p className="mt-1 text-xs">Opened {formatDate(account.openedAt)}</p>
+                </div>
+                <p className="inline-flex items-center gap-1 text-sm font-medium text-white">
+                  {activity} {activity === 1 ? "transaction" : "transactions"}
+                  <ChevronRight className="size-4" />
+                </p>
+              </div>
+            </BankingLink>
+          );
+        })}
       </div>
-    </div>
+    </BankingScreen>
   );
 }

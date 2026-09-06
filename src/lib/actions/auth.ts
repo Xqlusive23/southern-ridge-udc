@@ -30,6 +30,13 @@ export async function loginAction(
   if (expectedRole === "member" && result.user.role !== "member") {
     return { ok: false, error: "Staff should sign in through the operations console." };
   }
+  if (result.user.status === "pending" && result.user.role === "member") {
+    return {
+      ok: false,
+      error:
+        "This membership is waiting for operations approval. You can sign in after a branch officer activates it.",
+    };
+  }
   if (result.user.status === "frozen" && result.user.role === "member") {
     await createSession(result.user.id, result.user.role);
     redirect("/banking");
@@ -76,7 +83,7 @@ export async function registerAction(
   }
 
   try {
-    const created = await createMember({
+    await createMember({
       firstName,
       lastName,
       email,
@@ -87,15 +94,19 @@ export async function registerAction(
       state,
       zip,
       dateOfBirth,
+      status: "pending",
     });
-    await createSession(created.user.id, created.user.role);
   } catch (error) {
     return {
       ok: false,
       error: error instanceof Error ? error.message : "We could not open that account.",
     };
   }
-  redirect("/banking");
+  return {
+    ok: true,
+    message:
+      "Application received. A branch officer must approve this membership before you can sign in to E-Banking.",
+  };
 }
 
 export async function logoutAction() {

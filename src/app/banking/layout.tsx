@@ -1,7 +1,13 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { BankingNav } from "@/components/banking-nav";
-import { requireSession } from "@/lib/auth";
-import { logoutAction } from "@/lib/actions/auth";
+import { NotificationsBell } from "@/components/banking-notifications";
+import { SmartsuppChat } from "@/components/smartsupp-chat";
+import { clearSession, requireSession } from "@/lib/auth";
+import { memberDisplayName } from "@/lib/money";
+import { buildMemberInbox } from "@/lib/member-inbox";
+import { extractSmartsuppKey, smartsuppWidgetExists } from "@/lib/smartsupp";
+import { getMemberBanking, getSettings } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -12,39 +18,83 @@ export default async function BankingLayout({
 }) {
   const session = await requireSession("member");
   if (!session) redirect("/login");
+  if (session.status === "banned") {
+    await clearSession();
+    redirect("/login?banned=1");
+  }
+  if (session.status === "pending") {
+    await clearSession();
+    redirect("/login?pending=1");
+  }
+  const [banking, settings] = await Promise.all([
+    getMemberBanking(session.id),
+    getSettings(),
+  ]);
+  const requestedChatKey = extractSmartsuppKey(
+    process.env.NEXT_PUBLIC_SMARTSUPP_KEY || settings.smartsuppKey || "",
+  );
+  const chatKey =
+    requestedChatKey && (await smartsuppWidgetExists(requestedChatKey))
+      ? requestedChatKey
+      : "";
+  const notifications = banking
+    ? buildMemberInbox({
+        firstName: session.firstName,
+        status: banking.user.status,
+        transfers: banking.transfers,
+        loans: banking.loans,
+        readIds: banking.user.readNotificationIds,
+      })
+    : [];
 
   return (
-    <div className="flex min-h-full bg-[#F3F1EB] lg:h-screen lg:overflow-hidden">
-      <BankingNav user={session} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b bg-white px-4 py-3 lg:px-8">
+    <div className="relative flex min-h-full flex-col bg-[#102018] lg:h-screen lg:flex-row lg:overflow-hidden">
+      <Image
+        src="/media/ridge-dusk.jpg"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none object-cover object-[center_35%]"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[#102018]/55" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-[#102018]/70" />
+      <BankingNav
+        user={{
+          firstName: session.firstName,
+          lastName: session.lastName,
+          email: session.email,
+          photoPath: banking?.user.photoPath ?? null,
+        }}
+        notifications={notifications}
+      />
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="hidden items-center justify-between px-8 py-4 text-white lg:flex">
           <div>
-            <p className="text-xs tracking-[0.14em] text-[#2F7A45] uppercase">
+            <p className="text-[11px] tracking-[0.18em] text-white/55 uppercase">
               E-Banking
             </p>
-            <p className="text-sm font-medium text-[#0B2340]">
+            <p className="text-sm font-medium">
               {session.firstName} {session.lastName}
             </p>
           </div>
-          <form action={logoutAction} className="lg:hidden">
-            <button
-              type="submit"
-              className="text-sm font-medium text-[#0B2340] underline-offset-2 hover:underline"
-            >
-              Sign out
-            </button>
-          </form>
+          <NotificationsBell messages={notifications} />
         </header>
-        <main className="flex-1 overflow-y-auto px-4 py-6 pb-24 lg:px-8 lg:pb-8">
+        <main className="flex-1 overflow-y-auto">
           {session.status === "frozen" ? (
-            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              This membership is frozen. You can review balances, but transfers
-              are turned off until a branch officer restores access.
-            </div>
+            <p className="mx-5 mt-3 rounded-xl border border-amber-200/40 bg-amber-950/40 px-4 py-3 text-sm text-amber-50 lg:mx-8">
+              This account is frozen. You can review balances, but transfers
+              are turned off, contact support to restore access.
+            </p>
           ) : null}
           {children}
         </main>
       </div>
+      <SmartsuppChat
+        chatKey={chatKey}
+        name={memberDisplayName(session)}
+        email={session.email}
+      />
     </div>
   );
 }

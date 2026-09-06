@@ -80,7 +80,7 @@ export function LoginForm({
       />
       <button
         type="submit"
-        className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#0B2340] px-4 text-sm font-medium text-white hover:bg-[#08182C]"
+        className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#0B2340] px-4 text-sm font-medium text-white transition-[transform,background-color] duration-200 hover:bg-[#08182C] active:scale-[0.99]"
       >
         {role === "admin" ? "Enter operations console" : "Sign in to E-Banking"}
       </button>
@@ -120,7 +120,7 @@ export function RegisterForm() {
 
   return (
     <form action={action} className="grid gap-4">
-      <StatusBanner error={state?.error} />
+      <StatusBanner error={state?.error} message={state?.ok ? state.message : undefined} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id={`${prefix}-first`} label="First name" name="firstName" autoComplete="given-name" />
         <Field id={`${prefix}-last`} label="Last name" name="lastName" autoComplete="family-name" />

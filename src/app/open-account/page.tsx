@@ -15,8 +15,8 @@ export default function OpenAccountPage() {
           Open an account
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-          Everyday Checking and Ridge Savings are opened together. You can add
-          a business account later with a branch officer.
+          Everyday Checking and Ridge Savings are reserved together. A branch
+          officer must approve the membership before you can sign in.
         </p>
         <div className="mt-6 rounded-2xl border bg-white p-5 shadow-sm sm:p-7">
           <RegisterForm />

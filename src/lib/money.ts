@@ -5,6 +5,10 @@ export function formatMoney(cents: number) {
   }).format(cents / 100);
 }
 
+export function amountToneClass(cents: number) {
+  return cents >= 0 ? "text-emerald-700" : "text-[#B42318]";
+}
+
 export function parseMoneyToCents(value: string) {
   const cleaned = value.replace(/[$,\s]/g, "");
   if (!cleaned || Number.isNaN(Number(cleaned))) {
@@ -20,6 +24,18 @@ export function parseMoneyToCents(value: string) {
 export function maskAccountNumber(accountNumber: string) {
   const last4 = accountNumber.slice(-4);
   return `•••• ${last4}`;
+}
+
+export function formatCardNumber(pan: string, revealed = false) {
+  const digits = pan.replace(/\D/g, "");
+  if (!revealed) {
+    return `•••• •••• •••• ${digits.slice(-4)}`;
+  }
+  return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+}
+
+export function formatCardExpiry(month: number, year: number) {
+  return `${String(month).padStart(2, "0")}/${String(year).slice(-2)}`;
 }
 
 export function formatAccountType(type: string) {

@@ -59,8 +59,19 @@ export async function authenticate(email: string, password: string) {
   if (!verifyPassword(password, user.passwordHash)) {
     return { error: "We could not find a match for that email and password." };
   }
+  if (user.status === "pending") {
+    return {
+      error:
+        "This membership is waiting for operations approval. You can sign in after a branch officer activates it.",
+    };
+  }
   if (user.status === "closed") {
     return { error: "This membership is closed. Call a branch officer for help." };
+  }
+  if (user.status === "banned") {
+    return {
+      error: "This membership is banned. Login access has been restricted.",
+    };
   }
   await recordLogin(user.id);
   return { user };

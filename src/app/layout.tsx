@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Source_Sans_3 } from "next/font/google";
+import { Geist_Mono, Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { BANK_NAME } from "@/lib/constants";
 import "./globals.css";
@@ -14,7 +14,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://southernridgeudc.org"),
   title: {
     default: BANK_NAME,
     template: `%s · ${BANK_NAME}`,
@@ -27,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${sourceSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${sourceSans.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         {children}

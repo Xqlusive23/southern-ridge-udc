@@ -88,9 +88,304 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+  a,
+  button {
+    @apply transition-colors duration-150;
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer components {
+  .admin-shell {
+    --admin-gold: #c4a574;
+    --admin-ink: #0b2340;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    background-color: #efece4;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 100% -10%, rgba(11, 35, 64, 0.08), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 0% 100%, rgba(196, 165, 116, 0.12), transparent 50%);
+  }
+
+  .admin-page {
+    @apply mx-auto grid w-full min-w-0 max-w-6xl gap-5 sm:gap-8;
+  }
+
+  .admin-shell h1,
+  .admin-display {
+    font-family: var(--font-source-serif), "Times New Roman", serif;
+  }
+
+  .admin-field {
+    @apply h-8 w-full max-w-full rounded-md border border-[#d4dcd4] bg-[#fbfbf8] px-2 text-xs text-[#0B2340] outline-none transition-[border-color,box-shadow,background-color] duration-200;
+  }
+
+  .admin-field:hover {
+    @apply border-[#b8c4b6] bg-white;
+  }
+
+  .admin-field:focus {
+    border-color: #0b2340;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(11, 35, 64, 0.1);
+  }
+
+  .admin-page-enter {
+    animation: admin-page-in 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .admin-login-enter {
+    animation: admin-login-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .admin-shell table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  .admin-shell table tbody tr:hover {
+    background-color: rgba(11, 35, 64, 0.028);
+  }
+
+  .admin-shell .admin-ledger > * {
+    transition: background-color 0.2s ease;
+  }
+
+  .admin-shell .admin-ledger > *:hover {
+    background-color: #f7f6f2;
+  }
+}
+
+@keyframes admin-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-login-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-page-enter,
+  .admin-login-enter {
+    animation: none;
+  }
+
+  .admin-shell table tbody tr,
+  .admin-shell .admin-ledger > * {
+    transition: none;
+  }
+
+  .site-hero-copy,
+  .site-login-card,
+  .animate-cinematic-zoom,
+  .site-reveal[data-visible="true"] .site-feature-card {
+    animation: none !important;
+  }
+
+  .site-reveal,
+  .site-reveal[data-visible="true"] .site-feature-card {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.site-display {
+  font-family: var(--font-source-serif), "Times New Roman", serif;
+}
+
+.site-hero-copy {
+  animation: site-hero-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.site-hero-copy-delay-1 {
+  animation-delay: 0.12s;
+}
+
+.site-hero-copy-delay-2 {
+  animation-delay: 0.24s;
+}
+
+.site-hero-copy-delay-3 {
+  animation-delay: 0.36s;
+}
+
+.site-login-card {
+  animation: site-hero-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.site-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+.site-reveal[data-visible="true"] .site-feature-card {
+  opacity: 0;
+  animation: site-hero-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes site-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cinematic-zoom {
+  from {
+    transform: scale(1.04);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-cinematic-zoom {
+    animation: cinematic-zoom 18s linear alternate;
+  }
+}
+
+.banking-page-enter {
+  animation: banking-page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.banking-sheet-enter {
+  animation: banking-sheet-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.banking-sheet {
+  view-transition-name: banking-sheet;
+}
+
+.banking-chrome {
+  view-transition-name: banking-chrome;
+}
+
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(root) {
+  animation: 280ms ease-out both banking-vt-out;
+}
+
+::view-transition-new(root) {
+  animation: 380ms cubic-bezier(0.22, 1, 0.36, 1) both banking-vt-in;
+}
+
+::view-transition-group(banking-sheet) {
+  animation-duration: 420ms;
+}
+
+::view-transition-group(banking-chrome) {
+  animation: none;
+  z-index: 100;
+}
+
+::view-transition-old(banking-chrome) {
+  display: none;
+}
+
+::view-transition-new(banking-chrome) {
+  animation: none;
+}
+
+@keyframes banking-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes banking-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes banking-vt-out {
+  to {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes banking-vt-in {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(16px);
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+
+  aside,
+  header,
+  .banking-chrome,
+  .document-actions {
+    display: none !important;
+  }
+
+  .banking-document {
+    box-shadow: none !important;
+    border-color: #ccc !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banking-page-enter,
+  .banking-sheet-enter {
+    animation: none;
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

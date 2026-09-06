@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BankingScreen } from "@/components/banking-screen";
 import { TransactionList } from "@/components/shared";
 import { requireSession } from "@/lib/auth";
 import { getMemberBanking } from "@/lib/store";
@@ -10,18 +11,17 @@ export default async function ActivityPage() {
   if (!banking) redirect("/login");
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-[#0B2340]">Activity</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Deposits, purchases, transfers, and officer adjustments.
-        </p>
-      </div>
+    <BankingScreen
+      title="Activity"
+      description="View-only history of deposits, purchases, transfers, and officer adjustments."
+    >
       <TransactionList
+        className="border-[#e2ddd2]"
         transactions={banking.transactions}
         accounts={banking.accounts}
         empty="No transactions posted to these accounts yet."
+        showReceipts
       />
-    </div>
+    </BankingScreen>
   );
 }

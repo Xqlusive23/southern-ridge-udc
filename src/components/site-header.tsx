@@ -24,7 +24,7 @@ export function SiteHeader({
     <header
       className={
         overlay
-          ? "absolute inset-x-0 top-0 z-30"
+          ? "absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-[#0B2340]/50 to-transparent"
           : "sticky top-0 z-30 bg-[#0B2340]"
       }
     >
