@@ -59,7 +59,7 @@ The first store only includes the operations officer. Members are added from the
 
 **Members**
 
-- Open Everyday Checking and Ridge Savings online
+- Open Checking and Ridge Savings online
 - Review balances, account numbers, and activity
 - Transfer between their own accounts or to another member by account number
 - Update phone, address, and password

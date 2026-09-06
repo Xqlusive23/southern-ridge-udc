@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
-import { formatMoney } from "@/lib/money";
+import { useFormatMoney } from "@/components/member-display";
 import type { Account } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ export function AccountPicker({
   label: string;
   defaultAccountId?: string;
 }) {
+  const money = useFormatMoney();
   const [selected, setSelected] = useState(
     defaultAccountId && accounts.some((account) => account.id === defaultAccountId)
       ? defaultAccountId
@@ -51,7 +52,7 @@ export function AccountPicker({
               >
                 <span className="tabular-nums">{account.accountNumber}</span>
                 <span className="mx-1.5">·</span>
-                <span className="tabular-nums">{formatMoney(account.balanceCents)}</span>
+                <span className="tabular-nums">{money(account.balanceCents)}</span>
               </p>
             </button>
           );

@@ -29,21 +29,22 @@ import { NotificationsBell } from "@/components/banking-notifications";
 import { logoutAction } from "@/lib/actions/auth";
 import type { MemberMessage } from "@/lib/member-inbox";
 import { cn } from "@/lib/utils";
+import { DisplaySwitcher, useT } from "@/components/member-display";
 import { MemberPhoto } from "@/components/member-photo";
 import { memberDisplayName } from "@/lib/money";
 
 const LINKS = [
-  { href: "/banking", label: "Overview", icon: LayoutDashboard },
-  { href: "/banking/accounts", label: "Accounts", icon: Wallet },
-  { href: "/banking/cards", label: "Cards", icon: CreditCard },
-  { href: "/banking/transfer", label: "Transfers", icon: ArrowLeftRight },
-  { href: "/banking/activity", label: "Activity", icon: Receipt },
-  { href: "/banking/deposit", label: "Mobile deposit", icon: Smartphone },
-  { href: "/banking/pay", label: "Pay a person", icon: Users },
-  { href: "/banking/wire", label: "Wire", icon: Landmark },
-  { href: "/banking/loans", label: "Loan", icon: Banknote },
-  { href: "/banking/profile", label: "Profile", icon: UserRound },
-];
+  { href: "/banking", key: "overview", icon: LayoutDashboard },
+  { href: "/banking/accounts", key: "accounts", icon: Wallet },
+  { href: "/banking/cards", key: "cards", icon: CreditCard },
+  { href: "/banking/transfer", key: "transfers", icon: ArrowLeftRight },
+  { href: "/banking/activity", key: "activity", icon: Receipt },
+  { href: "/banking/deposit", key: "deposit", icon: Smartphone },
+  { href: "/banking/pay", key: "pay", icon: Users },
+  { href: "/banking/wire", key: "wire", icon: Landmark },
+  { href: "/banking/loans", key: "loan", icon: Banknote },
+  { href: "/banking/profile", key: "profile", icon: UserRound },
+] as const;
 
 function isActive(pathname: string, href: string) {
   return href === "/banking" ? pathname === "/banking" : pathname.startsWith(href);
@@ -85,10 +86,17 @@ function SidebarBody({
   pathname,
   onNavigate,
 }: {
-  user: { firstName: string; lastName: string; email: string; photoPath?: string | null };
+  user: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    photoPath?: string | null;
+    locale?: string;
+  };
   pathname: string;
   onNavigate?: () => void;
 }) {
+  const translate = useT();
   return (
     <>
       <div className="border-b border-white/10 px-5 py-6">
@@ -96,7 +104,7 @@ function SidebarBody({
           <BankLogo invert />
         </BankingLink>
         <p className="mt-6 text-xs tracking-[0.16em] text-[#c4a574] uppercase">
-          E-Banking
+          {translate("ebanking")}
         </p>
         <div className="mt-4 flex items-center gap-3">
           <div className="size-10 overflow-hidden rounded-full bg-white/12 text-xs font-semibold text-white">
@@ -116,7 +124,9 @@ function SidebarBody({
         {LINKS.map((link) => (
           <NavLink
             key={link.href}
-            {...link}
+            href={link.href}
+            label={translate(link.key)}
+            icon={link.icon}
             pathname={pathname}
             onNavigate={onNavigate}
           />
@@ -128,7 +138,7 @@ function SidebarBody({
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-white/65 transition-all duration-200 hover:bg-white/8 hover:text-white"
         >
           <LogOut className="size-4" />
-          Sign out
+          {translate("signOut")}
         </button>
       </form>
     </>
@@ -139,7 +149,14 @@ export function BankingNav({
   user,
   notifications,
 }: {
-  user: { firstName: string; lastName: string; email: string; photoPath?: string | null };
+  user: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    photoPath?: string | null;
+    locale?: string;
+    currency?: string;
+  };
   notifications: MemberMessage[];
 }) {
   const pathname = usePathname();
@@ -155,7 +172,7 @@ export function BankingNav({
         <SidebarBody user={user} pathname={pathname} />
       </aside>
 
-      <header className="banking-chrome sticky top-0 z-30 flex items-center justify-between px-3 py-2 text-white lg:hidden">
+      <header className="banking-chrome sticky top-0 z-30 flex items-center justify-between gap-2 px-3 py-2 text-white lg:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -164,7 +181,12 @@ export function BankingNav({
         >
           <Menu className="size-5" />
         </button>
-        <NotificationsBell messages={notifications} />
+        <div className="flex items-center gap-2">
+          {user.locale && user.currency ? (
+            <DisplaySwitcher locale={user.locale} currency={user.currency} />
+          ) : null}
+          <NotificationsBell messages={notifications} />
+        </div>
       </header>
 
       <Sheet open={open} onOpenChange={setOpen}>

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import type {
   LoanStatus,
   LoanType,
@@ -45,11 +46,15 @@ export const LOAN_STATUSES: { value: LoanStatus; label: string }[] = [
   { value: "paid", label: "Paid off" },
 ];
 
-export function transferKindLabel(kind: TransferKind) {
+export function transferKindLabel(kind: TransferKind, locale?: string) {
+  const translated = t(locale, `kind_${kind}`);
+  if (translated !== `kind_${kind}`) return translated;
   return TRANSFER_KINDS.find((item) => item.value === kind)?.label ?? kind;
 }
 
-export function transferStatusLabel(status: TransferStatus) {
+export function transferStatusLabel(status: TransferStatus, locale?: string) {
+  const translated = t(locale, `status_${status}`);
+  if (translated !== `status_${status}`) return translated;
   return TRANSFER_STATUSES.find((item) => item.value === status)?.label ?? status;
 }
 

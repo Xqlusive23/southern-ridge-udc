@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BankingScreen } from "@/components/banking-screen";
 import { TransactionList } from "@/components/shared";
+import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/auth";
 import { getMemberBanking } from "@/lib/store";
 
@@ -12,14 +13,14 @@ export default async function ActivityPage() {
 
   return (
     <BankingScreen
-      title="Activity"
-      description="View-only history of deposits, purchases, transfers, and officer adjustments."
+      title={t(banking.user.locale, "activity")}
+      description={t(banking.user.locale, "activityDesc")}
     >
       <TransactionList
         className="border-[#e2ddd2]"
         transactions={banking.transactions}
         accounts={banking.accounts}
-        empty="No transactions posted to these accounts yet."
+        empty={t(banking.user.locale, "noTransactions")}
         showReceipts
       />
     </BankingScreen>

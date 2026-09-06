@@ -11,6 +11,7 @@ import {
   homeBankBrand,
 } from "@/lib/bank-brand";
 import { confirmationNumber } from "@/lib/documents";
+import { t } from "@/lib/i18n";
 import { formatDateTime, formatMoney, maskAccountNumber } from "@/lib/money";
 import { transferStatusLabel } from "@/lib/transfers";
 import type { Account, BankSettings, Transaction } from "@/lib/types";
@@ -24,6 +25,8 @@ export type TransactionMailJob = {
   audience: "member" | "recipient";
   receivingBankName?: string;
   senderName?: string;
+  locale?: string;
+  currency?: string;
 };
 
 const queue: TransactionMailJob[] = [];
@@ -276,9 +279,10 @@ function buildReceiptHtml(input: {
   status: Transaction["status"];
   rows: Array<[string, string]>;
   note: string;
+  locale?: string;
 }) {
   const tone = statusTone(input.status);
-  const statusLabel = transferStatusLabel(input.status);
+  const statusLabel = transferStatusLabel(input.status, input.locale);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -360,6 +364,7 @@ function buildReceiptText(input: {
   status: Transaction["status"];
   rows: Array<[string, string]>;
   note: string;
+  locale?: string;
 }) {
   const lines = [
     input.brand.shortName,
@@ -369,7 +374,7 @@ function buildReceiptText(input: {
     input.greeting,
     "",
     `Amount: ${input.amount}`,
-    `Status: ${transferStatusLabel(input.status)}`,
+    `Status: ${transferStatusLabel(input.status, input.locale)}`,
     ...input.rows.filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`),
     "",
     input.note,
@@ -383,7 +388,8 @@ export function buildTransactionReceipt(job: TransactionMailJob) {
     job.transaction.amountCents >= 0 ||
     job.transaction.type === "transfer_in" ||
     job.transaction.type === "credit";
-  const amount = formatMoney(Math.abs(job.transaction.amountCents));
+  const moneyPrefs = { currency: job.currency, locale: job.locale };
+  const amount = formatMoney(Math.abs(job.transaction.amountCents), moneyPrefs);
   const signed = inbound ? amount : `−${amount}`;
   const confirmation = confirmationNumber(job.transaction.transferId || job.transaction.id);
   const receiving = job.receivingBankName
@@ -399,33 +405,40 @@ export function buildTransactionReceipt(job: TransactionMailJob) {
 
   const rows: Array<[string, string]> = [];
   if (job.audience === "member" && accountLabel) {
-    rows.push([inbound ? "Posted to" : "From account", accountLabel]);
+    rows.push([inbound ? t(job.locale, "postedTo") : t(job.locale, "fromAccount"), accountLabel]);
   }
   if (job.audience === "recipient") {
-    rows.push(["Received from", senderName || "A Southern Ridge member"]);
-    rows.push(["Receiving bank", receiving.shortName]);
+    rows.push([t(job.locale, "receivedFrom"), senderName || "A Southern Ridge member"]);
+    rows.push([t(job.locale, "receivingBank"), receiving.shortName]);
   } else if (counterparty) {
-    rows.push([inbound ? "From" : "Paid to", counterparty]);
+    rows.push([inbound ? t(job.locale, "from") : t(job.locale, "paidTo"), counterparty]);
     if (receiving.shortName !== BANK_SHORT) {
-      rows.push(["Receiving bank", receiving.shortName]);
+      rows.push([t(job.locale, "receivingBank"), receiving.shortName]);
     }
   }
-  if (description) rows.push(["Memo", description]);
-  rows.push(["Date / time", formatDateTime(job.transaction.createdAt)]);
+  if (description) rows.push([t(job.locale, "memo"), description]);
+  rows.push([t(job.locale, "dateTime"), formatDateTime(job.transaction.createdAt, job.locale)]);
+  if (job.currency && job.currency !== "USD") {
+    rows.push([
+      t(job.locale, "ledgerUsd"),
+      formatMoney(Math.abs(job.transaction.amountCents), "USD", "en"),
+    ]);
+  }
 
-  const title = inbound ? "Incoming transfer" : "Outgoing transfer";
+  const title = inbound ? t(job.locale, "incomingTransfer") : t(job.locale, "outgoingTransfer");
   const greeting =
     job.audience === "recipient"
-      ? `Hello ${job.toName}, you received an incoming transfer to your ${receiving.shortName} account.`
+      ? t(job.locale, "mailHelloReceived")
+          .replace("{name}", job.toName)
+          .replace("{bank}", receiving.shortName)
       : inbound
-        ? `Hello ${job.toName}, an incoming transfer posted to your account.`
-        : `Hello ${job.toName}, an outgoing transfer posted to your account.`;
-  const note =
-    "This receipt confirms the request as recorded. It is not a cashier's check, money order, or guarantee of final settlement until the status is completed. This notice was sent automatically.";
+        ? t(job.locale, "mailHelloIn").replace("{name}", job.toName)
+        : t(job.locale, "mailHelloOut").replace("{name}", job.toName);
+  const note = t(job.locale, "mailNote");
 
   return {
     brand,
-    subject: `${brand.shortName}: ${amount} ${inbound ? "received" : "sent"}`,
+    subject: `${brand.shortName}: ${amount} ${inbound ? t(job.locale, "received") : t(job.locale, "sent")}`,
     text: buildReceiptText({
       brand,
       title,
@@ -435,10 +448,11 @@ export function buildTransactionReceipt(job: TransactionMailJob) {
       status: job.transaction.status,
       rows,
       note,
+      locale: job.locale,
     }),
     html: buildReceiptHtml({
       brand,
-      eyebrow: "Official transaction receipt",
+      eyebrow: t(job.locale, "officialReceipt"),
       title,
       greeting,
       amount: signed,
@@ -447,6 +461,7 @@ export function buildTransactionReceipt(job: TransactionMailJob) {
       status: job.transaction.status,
       rows,
       note,
+      locale: job.locale,
     }),
   };
 }

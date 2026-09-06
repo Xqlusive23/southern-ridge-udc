@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DebitCardFace } from "@/components/banking-ui";
 import { setCardStatusAction } from "@/lib/actions/member";
+import { useFormatMoney } from "@/components/member-display";
 import { formatCardNumber } from "@/lib/money";
 import type { Account, DebitCard } from "@/lib/types";
 
@@ -21,6 +22,7 @@ export function MemberCardPanel({
   card: DebitCard;
   account?: Account;
 }) {
+  const money = useFormatMoney();
   const [revealed, setRevealed] = useState(false);
   const [state, action] = useActionState(setCardStatusAction, null);
   useToastResult(state);
@@ -28,7 +30,12 @@ export function MemberCardPanel({
 
   return (
     <div className="grid gap-4">
-      <DebitCardFace card={card} account={account} revealed={revealed} />
+      <DebitCardFace
+        card={card}
+        account={account}
+        revealed={revealed}
+        formattedBalance={account ? money(account.balanceCents) : undefined}
+      />
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"

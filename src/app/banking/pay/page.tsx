@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BankingScreen } from "@/components/banking-screen";
 import { MemberRequestList, PayPersonForm } from "@/components/member-services";
+import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/auth";
 import { getMemberBanking } from "@/lib/store";
 
@@ -14,8 +15,8 @@ export default async function PayPersonPage() {
 
   return (
     <BankingScreen
-      title="Pay"
-      description="Send money by name and recipient email. A transfer PIN is required on every payment."
+      title={t(banking.user.locale, "payTitle")}
+      description={t(banking.user.locale, "payDesc")}
     >
       {usable.length ? (
         <PayPersonForm

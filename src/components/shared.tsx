@@ -1,11 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { amountToneClass, formatAccountType, formatDateTime, formatMoney } from "@/lib/money";
+import { useFormatDate, useFormatMoney, useMemberDisplay, useT } from "@/components/member-display";
+import { amountToneClass, formatAccountType } from "@/lib/money";
 import { transferStatusLabel, transferStatusToneClass } from "@/lib/transfers";
 import type { Account, Transaction, TransferStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function StatusPill({ status }: { status: string }) {
+  const translate = useT();
   const tone =
     status === "hold"
       ? "bg-orange-50 text-orange-700 border-orange-200"
@@ -20,32 +24,37 @@ export function StatusPill({ status }: { status: string }) {
             : "bg-slate-100 text-slate-600 border-slate-200";
   return (
     <Badge variant="outline" className={cn("capitalize", tone)}>
-      {status.replaceAll("_", " ")}
+      {translate(`status_${status}`) === `status_${status}`
+        ? status.replaceAll("_", " ")
+        : translate(`status_${status}`)}
     </Badge>
   );
 }
 
 export function AccountCard({ account }: { account: Account }) {
+  const money = useFormatMoney();
+  const { locale } = useMemberDisplay();
+  const translate = useT();
   return (
     <div className="rounded-2xl bg-[linear-gradient(145deg,#16385c,#0B2340)] p-5 text-white shadow-[0_12px_28px_rgba(11,35,64,0.16)] transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(11,35,64,0.2)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs tracking-[0.16em] text-white/55 uppercase">
-            {formatAccountType(account.type)}
+            {formatAccountType(account.type, locale)}
           </p>
           <p className="mt-1 text-lg font-medium">{account.name}</p>
         </div>
         <StatusPill status={account.status} />
       </div>
       <p className="mt-6 text-3xl font-semibold tracking-tight">
-        {formatMoney(account.balanceCents)}
+        {money(account.balanceCents)}
       </p>
       <p className="mt-3 text-sm text-white/65">
         <span className="block text-xs tracking-[0.16em] text-white/45 uppercase">
-          Account number
+          {translate("account")}
         </span>
         <span className="tabular-nums text-white">{account.accountNumber}</span>
-        <span className="mt-1 block">Routing {account.routingNumber}</span>
+        <span className="mt-1 block">{translate("routing")} {account.routingNumber}</span>
       </p>
     </div>
   );
@@ -72,6 +81,10 @@ export function TransactionList({
     );
   }
 
+  const money = useFormatMoney();
+  const dates = useFormatDate();
+  const translate = useT();
+  const { locale } = useMemberDisplay();
   const names = new Map(accounts.map((account) => [account.id, account.name]));
 
   return (
@@ -86,7 +99,7 @@ export function TransactionList({
             <div className="min-w-0">
               <p className="truncate font-medium">{item.description}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {formatDateTime(item.createdAt)}
+                {dates.dateTime(item.createdAt)}
                 {names.get(item.accountId)
                   ? ` · ${names.get(item.accountId)}`
                   : ""}
@@ -98,7 +111,7 @@ export function TransactionList({
                       href={`/banking/receipts/${item.transferId}`}
                       className="font-medium text-[#2F7A45] underline-offset-4 hover:underline"
                     >
-                      Receipt
+                      {translate("receipt")}
                     </Link>
                   </>
                 ) : null}
@@ -112,7 +125,7 @@ export function TransactionList({
                 )}
               >
                 {inbound ? "+" : ""}
-                {formatMoney(item.amountCents)}
+                {money(item.amountCents)}
               </p>
               {item.status ? (
                 <p
@@ -121,7 +134,7 @@ export function TransactionList({
                     transferStatusToneClass(item.status),
                   )}
                 >
-                  {transferStatusLabel(item.status as TransferStatus)}
+                  {transferStatusLabel(item.status as TransferStatus, locale)}
                 </p>
               ) : null}
             </div>

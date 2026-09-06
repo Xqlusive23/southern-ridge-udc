@@ -74,6 +74,8 @@ export type User = {
   lastLoginAt: string | null;
   readNotificationIds: string[];
   photoPath: string | null;
+  locale: "en" | "es" | "fr" | "pt" | "ht";
+  currency: string;
 };
 
 export type Account = {
@@ -193,6 +195,8 @@ export type SessionUser = {
   firstName: string;
   lastName: string;
   status: MemberStatus;
+  locale: "en" | "es" | "fr" | "pt" | "ht";
+  currency: string;
 };
 
 export type PublicUser = Omit<User, "passwordHash" | "transferPinHash"> & {

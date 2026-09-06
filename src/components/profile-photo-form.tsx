@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { FormButton } from "@/components/form-button";
 import { MemberPhoto } from "@/components/member-photo";
 import { StatusBanner } from "@/components/status-banner";
+import { useT } from "@/components/member-display";
 import { uploadProfilePhotoAction } from "@/lib/actions/member";
 
 export function ProfilePhotoForm({
@@ -16,6 +17,7 @@ export function ProfilePhotoForm({
   initials: string;
   name: string;
 }) {
+  const translate = useT();
   const [state, action] = useActionState(uploadProfilePhotoAction, null);
 
   useEffect(() => {
@@ -23,14 +25,18 @@ export function ProfilePhotoForm({
   }, [state]);
 
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
+    <form
+      action={action}
+      encType="multipart/form-data"
+      className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center"
+    >
       <div className="size-24 overflow-hidden rounded-full bg-[#0B2340] text-lg font-medium text-[#F4E7C5]">
         <MemberPhoto photoPath={photoPath} initials={initials} alt={name} />
       </div>
       <div className="grid gap-2">
         <StatusBanner error={state?.error} />
         <label className="grid gap-1.5 text-sm">
-          <span className="font-medium text-[#0B2340]">Profile photo</span>
+          <span className="font-medium text-[#0B2340]">{translate("profilePhoto")}</span>
           <input
             name="photo"
             type="file"
@@ -40,10 +46,10 @@ export function ProfilePhotoForm({
           />
         </label>
         <p className="text-xs text-[#8A938C]">
-          JPEG, PNG, or WebP up to 2 MB. This photo appears on Overview and Profile.
+          {translate("photoHint")}
         </p>
         <FormButton className="h-9 w-fit bg-[#0B2340] text-white hover:bg-[#08182C]">
-          Upload photo
+          {translate("uploadPhoto")}
         </FormButton>
       </div>
     </form>

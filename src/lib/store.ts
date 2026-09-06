@@ -8,6 +8,7 @@ import {
   flushTransactionMail,
 } from "@/lib/mail";
 import { hashPassword, verifyPassword } from "@/lib/passwords";
+import { normalizeCurrency, normalizeLocale } from "@/lib/i18n";
 import type {
   Account,
   AccountStatus,
@@ -160,6 +161,8 @@ function normalizeUser(user: User): User {
       ? user.readNotificationIds
       : [],
     photoPath: user.photoPath ?? null,
+    locale: normalizeLocale(user.locale),
+    currency: normalizeCurrency(user.currency),
   };
 }
 
@@ -250,7 +253,10 @@ function normalizeTransaction(item: Transaction): Transaction {
 function normalizeStore(raw: Partial<BankStore>): BankStore {
   const store: BankStore = {
     users: (raw.users ?? []).map(normalizeUser),
-    accounts: raw.accounts ?? [],
+    accounts: (raw.accounts ?? []).map((account) => ({
+      ...account,
+      name: account.name === "Everyday Checking" ? "Checking" : account.name,
+    })),
     cards: raw.cards ?? [],
     transactions: (raw.transactions ?? []).map(normalizeTransaction),
     transfers: raw.transfers ?? [],
@@ -284,6 +290,8 @@ function publicUser(user: User): PublicUser {
     hasTransferPin: Boolean(normalized.transferPinHash),
     readNotificationIds: normalized.readNotificationIds,
     photoPath: normalized.photoPath,
+    locale: normalized.locale,
+    currency: normalized.currency,
   };
 }
 
@@ -327,6 +335,8 @@ function seedStore(): BankStore {
     lastLoginAt: null,
     readNotificationIds: [],
     photoPath: null,
+    locale: "en",
+    currency: "USD",
   };
   admin.contacts = contactsFromProfile(admin);
   return {
@@ -348,7 +358,12 @@ async function hydrateStore() {
         const loaded = await loadPersistedJson();
         if (loaded.status === "loaded") {
           try {
-            cache = normalizeStore(JSON.parse(loaded.json) as Partial<BankStore>);
+            const parsed = JSON.parse(loaded.json) as Partial<BankStore>;
+            const renamedChecking = (parsed.accounts ?? []).some(
+              (account) => account.name === "Everyday Checking",
+            );
+            cache = normalizeStore(parsed);
+            if (renamedChecking) dirty = true;
           } catch {
             throw new Error(
               "The membership ledger could not be read. Please try again in a moment.",
@@ -402,6 +417,9 @@ function recordTransaction(
   }
   for (const to of recipients) {
     const isOwner = Boolean(ownerEmail && ownerEmail === to);
+    const audienceUser = isOwner
+      ? owner
+      : store.users.find((user) => user.email.toLowerCase() === to);
     enqueueTransactionMail({
       to,
       toName: isOwner && owner
@@ -413,6 +431,8 @@ function recordTransaction(
       audience: isOwner ? "member" : "recipient",
       receivingBankName,
       senderName,
+      locale: audienceUser?.locale,
+      currency: audienceUser?.currency,
     });
   }
 }
@@ -571,6 +591,8 @@ export function createMember(input: {
       lastLoginAt: null,
       readNotificationIds: [],
       photoPath: null,
+      locale: "en",
+      currency: "USD",
     };
     user.contacts = contactsFromProfile(user);
 
@@ -578,7 +600,7 @@ export function createMember(input: {
       id: createId(),
       userId: user.id,
       type: "checking",
-      name: "Everyday Checking",
+      name: "Checking",
       accountNumber: generateAccountNumber(used),
       routingNumber: BANK_ROUTING,
       balanceCents: 0,
@@ -633,6 +655,8 @@ export function updateMember(
       | "zip"
       | "dateOfBirth"
       | "preferredContact"
+      | "locale"
+      | "currency"
     >
   >,
 ) {
@@ -664,6 +688,8 @@ export function updateMember(
     if (patch.preferredContact !== undefined) {
       user.preferredContact = patch.preferredContact;
     }
+    if (patch.locale !== undefined) user.locale = normalizeLocale(patch.locale);
+    if (patch.currency !== undefined) user.currency = normalizeCurrency(patch.currency);
     writeStore(store);
     return publicUser(user);
   });
@@ -1373,7 +1399,7 @@ function defaultTransferMemo(kind: TransferKind) {
 }
 
 function defaultAccountName(type: AccountType) {
-  if (type === "checking") return "Everyday Checking";
+  if (type === "checking") return "Checking";
   if (type === "savings") return "Ridge Savings";
   return "Business Operating";
 }

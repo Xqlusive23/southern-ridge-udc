@@ -119,3 +119,69 @@ export async function savePersistedJson(json: string) {
     console.error("Blob backup save failed", error);
   }
 }
+
+function photoPathname(userId: string) {
+  return `members/${userId}/photo`;
+}
+
+function localPhotoFile(userId: string) {
+  return path.join(DATA_DIR, "photos", userId);
+}
+
+function localPhotoMeta(userId: string) {
+  return path.join(DATA_DIR, "photos", `${userId}.type`);
+}
+
+export async function saveMemberPhoto(
+  userId: string,
+  body: Buffer,
+  contentType: string,
+) {
+  const pathname = photoPathname(userId);
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const dir = path.join(DATA_DIR, "photos");
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  writeFileSync(localPhotoFile(userId), body);
+  writeFileSync(localPhotoMeta(userId), contentType);
+
+  if (token) {
+    const { put } = await import("@vercel/blob");
+    await put(pathname, body, {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType,
+      token,
+    });
+  }
+  return pathname;
+}
+
+export async function loadMemberPhoto(userId: string) {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (token) {
+    try {
+      const { get } = await import("@vercel/blob");
+      const result = await get(photoPathname(userId), {
+        access: "private",
+        token,
+        useCache: false,
+      });
+      if (result?.statusCode === 200 && result.stream) {
+        const bytes = Buffer.from(await new Response(result.stream).arrayBuffer());
+        return {
+          bytes,
+          contentType: result.blob.contentType || "image/jpeg",
+        };
+      }
+    } catch (error) {
+      console.error("Photo blob load failed", error);
+    }
+  }
+  if (!existsSync(localPhotoFile(userId))) return null;
+  const bytes = readFileSync(localPhotoFile(userId));
+  const contentType = existsSync(localPhotoMeta(userId))
+    ? readFileSync(localPhotoMeta(userId), "utf8")
+    : "image/jpeg";
+  return { bytes, contentType };
+}

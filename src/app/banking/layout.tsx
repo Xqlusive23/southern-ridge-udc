@@ -2,11 +2,13 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { BankingNav } from "@/components/banking-nav";
 import { NotificationsBell } from "@/components/banking-notifications";
+import { DisplaySwitcher, MemberDisplayProvider } from "@/components/member-display";
 import { SmartsuppChat } from "@/components/smartsupp-chat";
 import { clearSession, requireSession } from "@/lib/auth";
-import { memberDisplayName } from "@/lib/money";
+import { memberDisplayName, photoSrc } from "@/lib/money";
 import { buildMemberInbox } from "@/lib/member-inbox";
 import { extractSmartsuppKey, smartsuppWidgetExists } from "@/lib/smartsupp";
+import { t } from "@/lib/i18n";
 import { getMemberBanking, getSettings } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -44,10 +46,16 @@ export default async function BankingLayout({
         transfers: banking.transfers,
         loans: banking.loans,
         readIds: banking.user.readNotificationIds,
+        locale: banking.user.locale,
+        currency: banking.user.currency,
       })
     : [];
+  const locale = banking?.user.locale ?? session.locale ?? "en";
+  const currency = banking?.user.currency ?? session.currency ?? "USD";
+  const photoPath = photoSrc(session.id, banking?.user.photoPath);
 
   return (
+    <MemberDisplayProvider locale={locale} currency={currency}>
     <div className="relative flex min-h-full flex-col bg-[#102018] lg:h-screen lg:flex-row lg:overflow-hidden">
       <Image
         src="/media/ridge-dusk.jpg"
@@ -64,7 +72,9 @@ export default async function BankingLayout({
           firstName: session.firstName,
           lastName: session.lastName,
           email: session.email,
-          photoPath: banking?.user.photoPath ?? null,
+          photoPath,
+          locale,
+          currency,
         }}
         notifications={notifications}
       />
@@ -78,13 +88,15 @@ export default async function BankingLayout({
               {session.firstName} {session.lastName}
             </p>
           </div>
-          <NotificationsBell messages={notifications} />
+          <div className="flex items-center gap-3">
+            <DisplaySwitcher locale={locale} currency={currency} />
+            <NotificationsBell messages={notifications} />
+          </div>
         </header>
         <main className="flex-1 overflow-y-auto">
           {session.status === "frozen" ? (
             <p className="mx-5 mt-3 rounded-xl border border-amber-200/40 bg-amber-950/40 px-4 py-3 text-sm text-amber-50 lg:mx-8">
-              This account is frozen. You can review balances, but transfers
-              are turned off, contact support to restore access.
+              {t(locale, "frozenBanner")}
             </p>
           ) : null}
           {children}
@@ -96,5 +108,6 @@ export default async function BankingLayout({
         email={session.email}
       />
     </div>
+    </MemberDisplayProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BankingScreen } from "@/components/banking-screen";
 import { MemberRequestList, WireTransferForm } from "@/components/member-services";
+import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/auth";
 import { getMemberBanking } from "@/lib/store";
 import { US_BANKS } from "@/lib/us-banks";
@@ -15,8 +16,8 @@ export default async function WirePage() {
 
   return (
     <BankingScreen
-      title="Wire"
-      description="Choose a U.S. receiving bank or prepaid issuer. Wires stay pending until operations holds, processes, rejects, or completes them."
+      title={t(banking.user.locale, "wireTitle")}
+      description={t(banking.user.locale, "wireDesc")}
     >
       {usable.length ? (
         <WireTransferForm

@@ -2,11 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BankingScreen } from "@/components/banking-screen";
 import { ProfileForm } from "@/components/member-forms";
+import { DisplayPreferencesForm } from "@/components/member-display";
 import { ProfilePhotoForm } from "@/components/profile-photo-form";
+import { t } from "@/lib/i18n";
 import { contactChannelLabel } from "@/lib/contacts";
 import { listStatementPeriods } from "@/lib/documents";
 import { requireSession } from "@/lib/auth";
-import { formatAccountType, formatMoney, memberDisplayName } from "@/lib/money";
+import { formatAccountType, formatMoney, memberDisplayName, photoSrc } from "@/lib/money";
 import { getMemberBanking, getSettings } from "@/lib/store";
 
 export default async function ProfilePage() {
@@ -22,28 +24,36 @@ export default async function ProfilePage() {
     .map((account) => account.openedAt)
     .sort()[0] ?? banking.user.createdAt;
   const statements = listStatementPeriods(openedAt);
+  const locale = banking.user.locale;
+  const moneyPrefs = { currency: banking.user.currency, locale };
 
   return (
     <BankingScreen
-      title="Profile"
-      description="Keep your contact details current. Name, email, bans, and account changes are handled by the operations desk."
+      title={t(locale, "profileTitle")}
+      description={t(locale, "profileDesc")}
     >
       <section>
-        <h2 className="font-semibold text-[#0B2340]">Profile photo</h2>
+        <h2 className="font-semibold text-[#0B2340]">{t(locale, "languageCurrency")}</h2>
         <p className="mt-1 mb-4 text-sm text-[#5C6B64]">
-          Upload a photo for Overview and this profile.
+          {t(locale, "languageCurrencyHelp")}
+        </p>
+        <DisplayPreferencesForm locale={locale} currency={banking.user.currency} />
+      </section>
+      <section className="mt-8">
+        <h2 className="font-semibold text-[#0B2340]">{t(locale, "profilePhoto")}</h2>
+        <p className="mt-1 mb-4 text-sm text-[#5C6B64]">
+          {t(locale, "profilePhotoHelp")}
         </p>
         <ProfilePhotoForm
-          photoPath={banking.user.photoPath}
+          photoPath={photoSrc(session.id, banking.user.photoPath)}
           initials={initials}
           name={memberDisplayName(banking.user)}
         />
       </section>
       <section className="mt-8">
-        <h2 className="font-semibold text-[#0B2340]">Monthly statements</h2>
+        <h2 className="font-semibold text-[#0B2340]">{t(locale, "statements")}</h2>
         <p className="mt-1 text-sm text-[#5C6B64]">
-          Final statements are ready after month end. The current month is an
-          interim statement until the period closes.
+          {t(locale, "statementsHelp")}
         </p>
         <ul className="mt-4 grid gap-2">
           {statements.map((item) => (
@@ -54,7 +64,7 @@ export default async function ProfilePage() {
               >
                 <span className="font-medium text-[#0B2340]">{item.label}</span>
                 <span className="text-xs tracking-[0.12em] text-[#2F7A45] uppercase">
-                  {item.kind === "final" ? "Generate statement" : "Interim"}
+                  {item.kind === "final" ? t(locale, "generateStatement") : t(locale, "interim")}
                 </span>
               </Link>
             </li>
@@ -62,9 +72,9 @@ export default async function ProfilePage() {
         </ul>
       </section>
       <section className="mt-8">
-        <h2 className="font-semibold text-[#0B2340]">Your account numbers</h2>
+        <h2 className="font-semibold text-[#0B2340]">{t(locale, "accountNumbers")}</h2>
         <p className="mt-1 text-sm text-[#5C6B64]">
-          Use these numbers for deposits and incoming transfers.
+          {t(locale, "accountNumbersHelp")}
         </p>
         <ul className="mt-4 grid gap-3">
           {banking.accounts.map((account) => (
@@ -74,22 +84,22 @@ export default async function ProfilePage() {
             >
               <div>
                 <p className="text-xs tracking-[0.14em] text-[#2F7A45] uppercase">
-                  {formatAccountType(account.type)}
+                  {formatAccountType(account.type, locale)}
                 </p>
                 <p className="text-sm font-medium text-[#0B2340]">{account.name}</p>
               </div>
               <div className="text-sm text-[#5C6B64] sm:text-right">
                 <p>
-                  Account{" "}
+                  {t(locale, "account")}{" "}
                   <span className="tabular-nums font-medium text-[#0B2340]">
                     {account.accountNumber}
                   </span>
                 </p>
                 <p>
-                  Routing{" "}
+                  {t(locale, "routing")}{" "}
                   <span className="tabular-nums">{account.routingNumber}</span>
                   {" · "}
-                  {formatMoney(account.balanceCents)}
+                  {formatMoney(account.balanceCents, moneyPrefs)}
                 </p>
               </div>
             </li>
@@ -98,7 +108,7 @@ export default async function ProfilePage() {
       </section>
       {banking.user.contacts.length > 0 ? (
         <section className="mt-8">
-          <h2 className="font-semibold text-[#0B2340]">On-file contacts</h2>
+          <h2 className="font-semibold text-[#0B2340]">{t(locale, "contacts")}</h2>
           <ul className="mt-4 grid gap-3">
             {banking.user.contacts.map((contact) => (
               <li
@@ -108,7 +118,7 @@ export default async function ProfilePage() {
                 <div>
                   <p className="text-xs tracking-[0.14em] text-[#2F7A45] uppercase">
                     {contactChannelLabel(contact.channel)}
-                    {contact.isPrimary ? " · Primary" : ""}
+                    {contact.isPrimary ? ` · ${t(locale, "primary")}` : ""}
                   </p>
                   <p className="text-sm font-medium text-[#0B2340]">{contact.label}</p>
                 </div>

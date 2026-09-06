@@ -60,6 +60,8 @@ export async function getSession(): Promise<SessionUser | null> {
       firstName: user.firstName,
       lastName: user.lastName,
       status: user.status,
+      locale: user.locale,
+      currency: user.currency,
     };
   } catch (error) {
     console.error("Session user lookup failed", error);

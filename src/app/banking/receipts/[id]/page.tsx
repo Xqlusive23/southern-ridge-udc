@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BankingReceipt } from "@/components/banking-receipt";
+import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/auth";
 import { getMemberBanking, getSettings } from "@/lib/store";
 
@@ -34,7 +35,7 @@ export default async function ReceiptPage({
         href="/banking/activity"
         className="document-actions mb-4 inline-block text-sm font-medium text-white/80 underline-offset-4 hover:underline"
       >
-        ← Back to activity
+        ← {t(banking.user.locale, "backToActivity")}
       </Link>
       <BankingReceipt
         settings={settings}

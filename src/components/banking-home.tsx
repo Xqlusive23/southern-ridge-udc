@@ -10,17 +10,18 @@ import {
   Wallet,
 } from "lucide-react";
 import { formatInboxDate, type MemberMessage } from "@/lib/member-inbox";
-import { formatMoney } from "@/lib/money";
+import { useFormatMoney, useT } from "@/components/member-display";
 import type { Account } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function accountStatusLabel(status: Account["status"]) {
-  if (status === "active") return "Current";
-  if (status === "frozen") return "Frozen";
-  return "Closed";
-}
-
 export function AccountCarousel({ accounts }: { accounts: Account[] }) {
+  const money = useFormatMoney();
+  const translate = useT();
+  function accountStatusLabel(status: Account["status"]) {
+    if (status === "active") return translate("current");
+    if (status === "frozen") return translate("frozen");
+    return translate("closed");
+  }
   const scroller = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
 
@@ -39,7 +40,7 @@ export function AccountCarousel({ accounts }: { accounts: Account[] }) {
   if (accounts.length === 0) {
     return (
       <p className="rounded-2xl bg-white/10 px-4 py-8 text-center text-sm text-white/80">
-        No accounts are open on this membership.
+        {translate("noAccounts")}
       </p>
     );
   }
@@ -62,7 +63,7 @@ export function AccountCarousel({ accounts }: { accounts: Account[] }) {
                   {account.name}
                 </p>
                 <p className="text-right text-2xl font-semibold tracking-tight tabular-nums">
-                  {formatMoney(account.balanceCents)}
+                  {money(account.balanceCents)}
                 </p>
               </div>
               <div className="mt-8 flex items-end justify-between text-sm text-white/70">
@@ -92,7 +93,7 @@ export function AccountCarousel({ accounts }: { accounts: Account[] }) {
           href="/banking/accounts"
           className="text-sm font-medium text-white/90 underline-offset-4 hover:underline"
         >
-          View all
+          {translate("viewAll")}
         </BankingLink>
       </div>
     </div>
@@ -100,13 +101,14 @@ export function AccountCarousel({ accounts }: { accounts: Account[] }) {
 }
 
 const ACTIONS = [
-  { href: "/banking/transfer", label: "Transfer", icon: ArrowLeftRight },
-  { href: "/banking/deposit", label: "Deposit", icon: ArrowDownToLine },
-  { href: "/banking/pay", label: "Pay", icon: Receipt },
-  { href: "/banking/accounts", label: "Accounts", icon: Wallet },
+  { href: "/banking/transfer", key: "transfers", icon: ArrowLeftRight },
+  { href: "/banking/deposit", key: "deposit", icon: ArrowDownToLine },
+  { href: "/banking/pay", key: "pay", icon: Receipt },
+  { href: "/banking/accounts", key: "accounts", icon: Wallet },
 ] as const;
 
 export function HomeActions() {
+  const translate = useT();
   return (
     <div className="grid grid-cols-4 gap-3">
       {ACTIONS.map((action) => (
@@ -118,7 +120,7 @@ export function HomeActions() {
           <span className="grid size-16 place-items-center rounded-[1.15rem] bg-[#16382B] shadow-[0_10px_22px_rgba(8,24,20,0.22)]">
             <action.icon className="size-6" strokeWidth={1.75} />
           </span>
-          <span className="text-xs font-medium">{action.label}</span>
+          <span className="text-xs font-medium">{translate(action.key)}</span>
         </BankingLink>
       ))}
     </div>

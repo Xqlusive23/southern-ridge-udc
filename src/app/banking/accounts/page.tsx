@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { BankingLink } from "@/components/banking-link";
 import { BankingScreen } from "@/components/banking-screen";
+import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/auth";
 import { formatAccountType, formatDate, formatMoney } from "@/lib/money";
 import { getMemberBanking } from "@/lib/store";
@@ -14,8 +15,8 @@ export default async function AccountsPage() {
 
   return (
     <BankingScreen
-      title="Accounts"
-      description="Open an account to review its balance, numbers, and posted activity."
+      title={t(banking.user.locale, "accounts")}
+      description={t(banking.user.locale, "accountsDesc")}
     >
       <div className="grid gap-4">
         {banking.accounts.map((account) => {
@@ -31,21 +32,21 @@ export default async function AccountsPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] tracking-[0.16em] text-white/55 uppercase">
-                    {formatAccountType(account.type)}
+                    {formatAccountType(account.type, banking.user.locale)}
                   </p>
                   <p className="mt-1 text-lg font-semibold">{account.name}</p>
                 </div>
                 <p className="text-right text-2xl font-semibold tabular-nums">
-                  {formatMoney(account.balanceCents)}
+                  {formatMoney(account.balanceCents, banking.user)}
                 </p>
               </div>
               <div className="mt-6 flex items-end justify-between text-sm text-white/70">
                 <div>
                   <p className="tabular-nums">{account.accountNumber}</p>
-                  <p className="mt-1 text-xs">Opened {formatDate(account.openedAt)}</p>
+                  <p className="mt-1 text-xs">{t(banking.user.locale, "opened")} {formatDate(account.openedAt, banking.user.locale)}</p>
                 </div>
                 <p className="inline-flex items-center gap-1 text-sm font-medium text-white">
-                  {activity} {activity === 1 ? "transaction" : "transactions"}
+                  {activity} {activity === 1 ? t(banking.user.locale, "transaction") : t(banking.user.locale, "transactions")}
                   <ChevronRight className="size-4" />
                 </p>
               </div>

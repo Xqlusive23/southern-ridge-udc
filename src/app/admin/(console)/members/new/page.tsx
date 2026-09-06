@@ -13,7 +13,7 @@ export default async function AddMemberPage() {
     <div className="admin-page">
       <AdminPageHeader
         title="Add member"
-        description="Open Everyday Checking and Ridge Savings for a new membership, or approve an application waiting at the desk."
+        description="Open Checking and Ridge Savings for a new membership, or approve an application waiting at the desk."
       />
 
       <AdminCard>

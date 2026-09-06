@@ -17,7 +17,7 @@ const TIERS = [
   },
   {
     title: "Share accounts",
-    copy: "Everyday Checking and Ridge Savings open together. A business account can be added later at the desk.",
+    copy: "Checking and Ridge Savings open together. A business account can be added later at the desk.",
     icon: Wallet,
   },
   {

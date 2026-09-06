@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BankingScreen } from "@/components/banking-screen";
 import { MemberRequestList, MobileDepositForm } from "@/components/member-services";
+import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/auth";
 import { getMemberBanking } from "@/lib/store";
 
@@ -14,8 +15,8 @@ export default async function MobileDepositPage() {
 
   return (
     <BankingScreen
-      title="Deposit"
-      description="Submit a check for review. Operations posts the funds when the deposit is completed."
+      title={t(banking.user.locale, "depositTitle")}
+      description={t(banking.user.locale, "depositDesc")}
     >
       {usable.length ? (
         <MobileDepositForm accounts={usable} />

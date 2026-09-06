@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BankingScreen } from "@/components/banking-screen";
 import { TransferForm } from "@/components/member-forms";
+import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/auth";
 import { getMemberBanking } from "@/lib/store";
 import { US_BANKS } from "@/lib/us-banks";
@@ -13,8 +14,8 @@ export default async function TransferPage() {
 
   return (
     <BankingScreen
-      title="Transfer"
-      description="Send money to another person or between your own accounts. Recipient email and transfer PIN are required."
+      title={t(banking.user.locale, "transferTitle")}
+      description={t(banking.user.locale, "transferDesc")}
     >
       <TransferForm
         accounts={banking.accounts}

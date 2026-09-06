@@ -58,10 +58,12 @@ export function DebitCardFace({
   card,
   account,
   revealed = false,
+  formattedBalance,
 }: {
   card: DebitCard;
   account?: Account;
   revealed?: boolean;
+  formattedBalance?: string;
 }) {
   const business = card.kind === "business";
   return (
@@ -111,7 +113,8 @@ export function DebitCardFace({
       </div>
       {account ? (
         <p className="relative mt-3 text-[10px] text-white/50">
-          {account.name} · {formatAccountType(account.type)} · {formatMoney(account.balanceCents)}
+          {account.name} · {formatAccountType(account.type)} ·{" "}
+          {formattedBalance ?? formatMoney(account.balanceCents)}
         </p>
       ) : null}
       {card.status !== "active" ? (

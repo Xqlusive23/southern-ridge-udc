@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Accounts" };
 
 const ACCOUNTS = [
   {
-    name: "Everyday Checking",
+    name: "Checking",
     copy: "No monthly minimum after direct deposit. Debit card, bill pay, and instant transfers to Ridge Savings.",
   },
   {

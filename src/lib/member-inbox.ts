@@ -28,6 +28,8 @@ export function buildMemberInbox(input: {
   transfers: TransferRequest[];
   loans: Loan[];
   readIds?: string[];
+  locale?: string;
+  currency?: string;
 }): MemberMessage[] {
   const read = new Set(input.readIds ?? []);
   const messages: MemberMessage[] = [];
@@ -53,8 +55,8 @@ export function buildMemberInbox(input: {
       transfer.status === "processing";
     messages.push({
       id: `transfer-${transfer.id}`,
-      title: transfer.recipientName || transferKindLabel(transfer.kind),
-      preview: `${transferKindLabel(transfer.kind)} for ${formatMoney(transfer.amountCents)} is ${transferStatusLabel(transfer.status).toLowerCase()}${transfer.memo ? ` · ${transfer.memo}` : ""}.`,
+      title: transfer.recipientName || transferKindLabel(transfer.kind, input.locale),
+      preview: `${transferKindLabel(transfer.kind, input.locale)} for ${formatMoney(transfer.amountCents, input)} is ${transferStatusLabel(transfer.status, input.locale).toLowerCase()}${transfer.memo ? ` · ${transfer.memo}` : ""}.`,
       createdAt: transfer.updatedAt || transfer.createdAt,
       unread: !read.has(`transfer-${transfer.id}`) && open,
       href:
@@ -76,7 +78,7 @@ export function buildMemberInbox(input: {
     messages.push({
       id: `loan-${loan.id}`,
       title: loanTypeLabel(loan.type),
-      preview: `Your ${loanTypeLabel(loan.type).toLowerCase()} for ${formatMoney(loan.amountCents)} is ${loanStatusLabel(loan.status).toLowerCase()}${loan.note ? ` · ${loan.note}` : ""}.`,
+      preview: `Your ${loanTypeLabel(loan.type).toLowerCase()} for ${formatMoney(loan.amountCents, input)} is ${loanStatusLabel(loan.status).toLowerCase()}${loan.note ? ` · ${loan.note}` : ""}.`,
       createdAt: loan.updatedAt || loan.createdAt,
       unread: !read.has(`loan-${loan.id}`) && open,
       href: "/banking/loans",

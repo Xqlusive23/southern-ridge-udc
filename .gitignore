@@ -47,6 +47,8 @@ next-env.d.ts
 # member photo uploads
 /public/uploads/members/*
 !/public/uploads/members/.gitkeep
+/data/photos/*
+!/data/photos/.gitkeep
 
 .vercel
 .env*

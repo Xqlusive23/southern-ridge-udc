@@ -15,7 +15,8 @@ import {
   payPersonAction,
   wireTransferAction,
 } from "@/lib/actions/member";
-import { amountToneClass, formatDateTime, formatMoney } from "@/lib/money";
+import { useFormatDate, useFormatMoney } from "@/components/member-display";
+import { amountToneClass } from "@/lib/money";
 import { LOAN_TYPES, transferKindLabel } from "@/lib/transfers";
 import type { Account, Loan, TransferRequest } from "@/lib/types";
 
@@ -58,6 +59,7 @@ function AccountSelect({
   name?: string;
   label?: string;
 }) {
+  const money = useFormatMoney();
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={name}>{label}</Label>
@@ -70,7 +72,7 @@ function AccountSelect({
         {accounts.map((account) => (
           <option key={account.id} value={account.id}>
             {account.name} · {account.accountNumber} ·{" "}
-            {formatMoney(account.balanceCents)}
+            {money(account.balanceCents)}
           </option>
         ))}
       </select>
@@ -273,6 +275,8 @@ export function MemberRequestList({
   transfers: TransferRequest[];
   empty: string;
 }) {
+  const money = useFormatMoney();
+  const dates = useFormatDate();
   if (transfers.length === 0) {
     return (
       <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
@@ -294,7 +298,7 @@ export function MemberRequestList({
             </p>
             <p className="font-medium text-[#0B2340]">{item.recipientName}</p>
             <p className="text-xs text-muted-foreground">
-              {formatDateTime(item.createdAt)}
+              {dates.dateTime(item.createdAt)}
               {item.memo ? ` · ${item.memo}` : ""}
               {" · "}
               <Link
@@ -308,7 +312,7 @@ export function MemberRequestList({
           <div className="flex items-center gap-3">
             <StatusPill status={item.status} />
             <p className={`font-semibold tabular-nums ${amountToneClass(-item.amountCents)}`}>
-              −{formatMoney(item.amountCents)}
+              −{money(item.amountCents)}
             </p>
           </div>
         </li>
@@ -318,6 +322,7 @@ export function MemberRequestList({
 }
 
 export function MemberLoanList({ loans }: { loans: Loan[] }) {
+  const money = useFormatMoney();
   if (loans.length === 0) {
     return (
       <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
@@ -346,7 +351,7 @@ export function MemberLoanList({ loans }: { loans: Loan[] }) {
           <div className="flex items-center gap-3">
             <StatusPill status={loan.status} />
             <p className="font-semibold tabular-nums text-[#0B2340]">
-              {formatMoney(loan.amountCents)}
+              {money(loan.amountCents)}
             </p>
           </div>
         </li>

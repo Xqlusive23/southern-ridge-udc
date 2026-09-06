@@ -1,11 +1,11 @@
 "use server";
 
-import { mkdirSync, writeFileSync } from "fs";
-import path from "path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
+import { normalizeCurrency, normalizeLocale } from "@/lib/i18n";
 import { parseMoneyToCents } from "@/lib/money";
+import { saveMemberPhoto } from "@/lib/persist";
 import {
   applyForLoan,
   createMobileDeposit,
@@ -161,6 +161,27 @@ export async function updateProfileAction(
   return { ok: true, message: "Profile updated." };
 }
 
+export async function updateDisplayPreferencesAction(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const session = await requireSession("member");
+  if (!session) return { ok: false, error: "Your session expired. Sign in again." };
+  try {
+    await updateMember(session.id, {
+      locale: normalizeLocale(String(formData.get("locale") ?? session.locale)),
+      currency: normalizeCurrency(String(formData.get("currency") ?? session.currency)),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "We could not save those preferences.",
+    };
+  }
+  revalidatePath("/banking", "layout");
+  return { ok: true, message: "Language and currency updated." };
+}
+
 export async function uploadProfilePhotoAction(
   _prev: ActionResult | null,
   formData: FormData,
@@ -169,39 +190,60 @@ export async function uploadProfilePhotoAction(
   if (!session) return { ok: false, error: "Your session expired. Sign in again." };
 
   const file = formData.get("photo");
-  if (!(file instanceof File) || file.size === 0) {
+  if (!isUploadedFile(file) || file.size === 0) {
     return { ok: false, error: "Choose a photo to upload." };
   }
   if (file.size > 2 * 1024 * 1024) {
     return { ok: false, error: "Photo must be 2 MB or smaller." };
   }
-  const ext =
-    file.type === "image/png"
-      ? "png"
-      : file.type === "image/webp"
-        ? "webp"
-        : file.type === "image/jpeg"
-          ? "jpg"
-          : null;
-  if (!ext) {
+  const photo = photoKind(file);
+  if (!photo) {
     return { ok: false, error: "Use a JPEG, PNG, or WebP photo." };
   }
 
   try {
-    const dir = path.join(process.cwd(), "public", "uploads", "members");
-    mkdirSync(dir, { recursive: true });
-    const filename = `${session.id}-${Date.now()}.${ext}`;
-    writeFileSync(path.join(dir, filename), Buffer.from(await file.arrayBuffer()));
-    await setMemberPhoto(session.id, `/uploads/members/${filename}`);
+    await saveMemberPhoto(
+      session.id,
+      Buffer.from(await file.arrayBuffer()),
+      photo.contentType,
+    );
+    await setMemberPhoto(
+      session.id,
+      `/api/member-photo/${session.id}?v=${Date.now()}`,
+    );
   } catch (error) {
     return {
       ok: false,
       error: error instanceof Error ? error.message : "We could not save that photo.",
     };
   }
-  revalidatePath("/banking");
-  revalidatePath("/banking/profile");
+  revalidatePath("/banking", "layout");
   return { ok: true, message: "Profile photo updated." };
+}
+
+function isUploadedFile(value: FormDataEntryValue | null): value is File {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "arrayBuffer" in value &&
+      "size" in value &&
+      Number((value as File).size) >= 0,
+  );
+}
+
+function photoKind(file: File) {
+  const type = file.type.toLowerCase();
+  const name = file.name.toLowerCase();
+  if (type === "image/png" || name.endsWith(".png")) {
+    return { contentType: "image/png" };
+  }
+  if (type === "image/webp" || name.endsWith(".webp")) {
+    return { contentType: "image/webp" };
+  }
+  if (type === "image/jpeg" || name.endsWith(".jpg") || name.endsWith(".jpeg")) {
+    return { contentType: "image/jpeg" };
+  }
+  return null;
 }
 
 export async function changePasswordAction(

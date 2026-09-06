@@ -37,6 +37,7 @@ export function BankingStatement({
   end: Date;
 }) {
   const listed = accountsForStatement(accounts);
+  const moneyPrefs = { currency: member.currency, locale: member.locale };
 
   return (
     <article className="banking-document mx-auto w-full max-w-3xl overflow-hidden rounded-sm border border-[#c8c1b2] bg-[#fffdf8] text-[#1b1b1b] shadow-[0_18px_40px_rgba(11,35,64,0.12)]">
@@ -75,10 +76,10 @@ export function BankingStatement({
           </p>
           <p className="mt-1 font-medium text-[#0B2340]">{period.label}</p>
           <p className="text-sm text-[#5C6B64]">
-            {formatDate(start.toISOString())} – {formatDate(end.toISOString())}
+            {formatDate(start.toISOString(), member.locale)} – {formatDate(end.toISOString(), member.locale)}
           </p>
           <p className="mt-2 text-sm text-[#5C6B64]">
-            Prepared {formatDate(new Date().toISOString())}
+            Prepared {formatDate(new Date().toISOString(), member.locale)}
           </p>
         </div>
       </div>
@@ -101,10 +102,10 @@ export function BankingStatement({
               </div>
               <div className="text-right text-sm">
                 <p className="text-[#5C6B64]">
-                  Opening {formatMoney(opening)}
+                  Opening {formatMoney(opening, moneyPrefs)}
                 </p>
                 <p className="font-semibold text-[#0B2340]">
-                  Closing {formatMoney(closing)}
+                  Closing {formatMoney(closing, moneyPrefs)}
                 </p>
               </div>
             </div>
@@ -128,7 +129,7 @@ export function BankingStatement({
                   {lines.map((item) => (
                     <tr key={item.id} className="border-b border-[#f0eee8] last:border-0">
                       <td className="py-2 align-top whitespace-nowrap text-[#5C6B64]">
-                        {formatDateTime(item.createdAt)}
+                        {formatDateTime(item.createdAt, member.locale)}
                       </td>
                       <td className="py-2 align-top">
                         <p className="font-medium text-[#0B2340]">{item.description}</p>
@@ -143,10 +144,10 @@ export function BankingStatement({
                         className={`py-2 align-top text-right font-semibold tabular-nums ${amountToneClass(item.amountCents)}`}
                       >
                         {item.amountCents >= 0 ? "+" : ""}
-                        {formatMoney(item.amountCents)}
+                        {formatMoney(item.amountCents, moneyPrefs)}
                       </td>
                       <td className="hidden py-2 align-top text-right tabular-nums text-[#5C6B64] sm:table-cell">
-                        {formatMoney(item.balanceAfterCents)}
+                        {formatMoney(item.balanceAfterCents, moneyPrefs)}
                       </td>
                     </tr>
                   ))}

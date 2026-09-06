@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { BankingScreen } from "@/components/banking-screen";
 import { LoanApplicationForm, MemberLoanList } from "@/components/member-services";
+import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/auth";
 import { getMemberBanking } from "@/lib/store";
 
@@ -12,8 +13,8 @@ export default async function LoansPage() {
 
   return (
     <BankingScreen
-      title="Loan"
-      description="Apply for a personal, auto, home, or line-of-credit loan. Only the operations desk can approve, deny, or activate it."
+      title={t(banking.user.locale, "loanTitle")}
+      description={t(banking.user.locale, "loanDesc")}
     >
       <LoanApplicationForm />
       <div className="mt-8">
