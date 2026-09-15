@@ -53,7 +53,7 @@ The first store only includes the operations officer. Members are added from the
 
 | Portal | Email | Password |
 | --- | --- | --- |
-| Operations console | `admin@southernridgeudc.com` | `RidgeAdmin26` |
+| Operations console | `admin@southernridgeudc.org` | `SRFF7A6062!Admin` |
 
 ## What you can do
 
