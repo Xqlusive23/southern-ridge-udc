@@ -12,7 +12,10 @@ function sessionCookieBase() {
     httpOnly: true as const,
     sameSite: "lax" as const,
     path: "/",
-    secure: process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL),
+    secure:
+      process.env.NODE_ENV === "production" ||
+      Boolean(process.env.VERCEL) ||
+      Boolean(process.env.RAILWAY_ENVIRONMENT),
   };
 }
 

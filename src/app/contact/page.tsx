@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getSettings } from "@/lib/store";
+import { getPublicSettings } from "@/lib/store";
 
 export const metadata: Metadata = { title: "Contact" };
 export const dynamic = "force-dynamic";
 
 export default async function ContactPage() {
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
 
   return (
     <div className="flex min-h-full flex-col">

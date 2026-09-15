@@ -1446,6 +1446,16 @@ export function getSettings() {
   return withLock(() => readStore().settings);
 }
 
+/** Settings for public pages — never throws if the ledger is offline. */
+export async function getPublicSettings(): Promise<BankSettings> {
+  try {
+    return await getSettings();
+  } catch (error) {
+    console.error("Public settings unavailable; using defaults", error);
+    return defaultSettings();
+  }
+}
+
 export function updateSettings(patch: Partial<BankSettings>) {
   return withLock(() => {
     const store = readStore();

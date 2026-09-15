@@ -1,0 +1,12 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm run build"
+
+[deploy]
+startCommand = "npx next start --hostname 0.0.0.0 --port $PORT"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# Attach a Volume in the Railway dashboard (mount path /data), then set:
+#   DATA_DIR=/data
+# Ledger + member photos persist across deploys without Vercel Blob.

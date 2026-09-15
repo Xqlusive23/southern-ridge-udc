@@ -27,6 +27,13 @@ export const metadata: Metadata = {
   },
   description:
     "E-Banking and operations console for Southern Ridge Union De' Creditos.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [{ url: "/email-mark.png" }],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

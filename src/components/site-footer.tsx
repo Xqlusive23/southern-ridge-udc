@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { BankLogo } from "@/components/logo";
 import { BANK_ROUTING, BANK_SHORT } from "@/lib/constants";
-import { getSettings } from "@/lib/store";
+import { getPublicSettings } from "@/lib/store";
 
 export async function SiteFooter() {
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
 
   return (
     <footer className="mt-auto bg-[#08182C] text-white">

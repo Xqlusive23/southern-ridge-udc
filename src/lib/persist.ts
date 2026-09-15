@@ -3,12 +3,39 @@ import "server-only";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 
-const DATA_DIR = process.env.VERCEL
-  ? path.join("/tmp", "southern-ridge-udc")
-  : path.join(process.cwd(), "data");
+/**
+ * Durable disk on Railway (volume) or local `data/`.
+ * Vercel /tmp is ephemeral — there we still prefer Blob when configured.
+ */
+function resolveDataDir() {
+  if (process.env.DATA_DIR) return process.env.DATA_DIR;
+  if (process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+    return process.env.RAILWAY_VOLUME_MOUNT_PATH;
+  }
+  if (process.env.VERCEL) {
+    return path.join("/tmp", "southern-ridge-udc");
+  }
+  return path.join(process.cwd(), "data");
+}
+
+const DATA_DIR = resolveDataDir();
 const DATA_FILE = path.join(DATA_DIR, "bank.json");
 const BLOB_PATHNAME = "bank-store.json";
 const BLOB_BACKUP_PATHNAME = "bank-store.backup.json";
+
+/** True when writes to DATA_DIR survive restarts (local + Railway volume). */
+function hasDurableDisk() {
+  if (process.env.DATA_DIR || process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+    return true;
+  }
+  // Plain Railway container disk lasts until redeploy; better than Blob flakiness.
+  if (process.env.RAILWAY_ENVIRONMENT) return true;
+  return !process.env.VERCEL;
+}
+
+function blobToken() {
+  return process.env.BLOB_READ_WRITE_TOKEN?.trim() || "";
+}
 
 export type PersistedLoad =
   | { status: "loaded"; json: string; durable: boolean }
@@ -46,15 +73,7 @@ async function readBlobText(
   return text.trim() ? text : null;
 }
 
-export async function loadPersistedJson(): Promise<PersistedLoad> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) {
-    if (process.env.VERCEL) return { status: "unavailable" };
-    const local = readLocal();
-    if (local) return { status: "loaded", json: local, durable: true };
-    return { status: "missing" };
-  }
-
+async function loadFromBlob(token: string): Promise<PersistedLoad> {
   try {
     const { get, list } = await import("@vercel/blob");
     for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -80,24 +99,39 @@ export async function loadPersistedJson(): Promise<PersistedLoad> {
       if (attempt === 0) await wait(250);
     }
 
-    const local = readLocal();
-    if (local) return { status: "loaded", json: local, durable: false };
     return { status: "missing" };
   } catch (error) {
     console.error("Blob load failed", error);
-    const local = readLocal();
-    if (local) return { status: "loaded", json: local, durable: false };
     return { status: "unavailable" };
   }
 }
 
+export async function loadPersistedJson(): Promise<PersistedLoad> {
+  const local = readLocal();
+  if (local) {
+    return { status: "loaded", json: local, durable: hasDurableDisk() };
+  }
+
+  const token = blobToken();
+  if (token) {
+    const fromBlob = await loadFromBlob(token);
+    if (fromBlob.status === "loaded") return fromBlob;
+    if (hasDurableDisk()) return { status: "missing" };
+    return fromBlob;
+  }
+
+  if (hasDurableDisk()) return { status: "missing" };
+  return { status: "unavailable" };
+}
+
 export async function savePersistedJson(json: string) {
   writeLocal(json);
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+
+  const token = blobToken();
   if (!token) {
-    if (process.env.VERCEL) {
+    if (!hasDurableDisk()) {
       throw new Error(
-        "The membership ledger is not connected. Set BLOB_READ_WRITE_TOKEN on Vercel.",
+        "The membership ledger is not connected. Deploy on Railway with a volume (DATA_DIR) or set BLOB_READ_WRITE_TOKEN.",
       );
     }
     return;
@@ -138,7 +172,7 @@ export async function saveMemberPhoto(
   contentType: string,
 ) {
   const pathname = photoPathname(userId);
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = blobToken();
   const dir = path.join(DATA_DIR, "photos");
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(localPhotoFile(userId), body);
@@ -158,7 +192,7 @@ export async function saveMemberPhoto(
 }
 
 export async function loadMemberPhoto(userId: string) {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = blobToken();
   if (token) {
     try {
       const { get } = await import("@vercel/blob");
