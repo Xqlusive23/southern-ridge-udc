@@ -29,10 +29,12 @@ export const metadata: Metadata = {
     "E-Banking and operations console for Southern Ridge Union De' Creditos.",
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg?v=srudc2", type: "image/svg+xml" },
+      { url: "/brand-mark.png?v=srudc2", type: "image/png", sizes: "64x64" },
+      { url: "/favicon.ico?v=srudc2", sizes: "any" },
     ],
-    apple: [{ url: "/email-mark.png" }],
+    shortcut: "/brand-mark.png?v=srudc2",
+    apple: [{ url: "/email-mark.png?v=srudc2" }],
   },
 };
 
