@@ -40,10 +40,9 @@ let persistBlocked = false;
 
 function withLock<T>(fn: () => T): Promise<T> {
   const run = writeChain.then(async () => {
-    cache = null;
-    hydrate = null;
-    persistBlocked = false;
-    dirty = false;
+    // Keep the in-memory cache for the life of this process.
+    // Clearing on every call re-fetched Blob on each login/page load and
+    // exhausted Hobby operation limits.
     await hydrateStore();
     const result = fn();
     if (cache && dirty && !persistBlocked) {
