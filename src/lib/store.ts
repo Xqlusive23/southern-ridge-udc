@@ -373,6 +373,13 @@ async function hydrateStore() {
           return;
         }
         if (loaded.status === "unavailable") {
+          const onVercel = Boolean(process.env.VERCEL);
+          const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+          if (onVercel && !hasBlob) {
+            throw new Error(
+              "The membership ledger is not connected. In the Vercel project, open Storage → Blob, copy the token into BLOB_READ_WRITE_TOKEN, and redeploy.",
+            );
+          }
           throw new Error(
             "The membership ledger is temporarily unavailable. Please try again in a moment.",
           );

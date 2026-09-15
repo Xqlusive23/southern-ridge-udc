@@ -121,6 +121,10 @@ export async function loadPersistedJson(): Promise<PersistedLoad> {
   }
 
   if (hasDurableDisk()) return { status: "missing" };
+  // Vercel serverless disk is ephemeral — without Blob the ledger cannot open.
+  console.error(
+    "Membership ledger unavailable: set BLOB_READ_WRITE_TOKEN on Vercel, or host on Railway with DATA_DIR.",
+  );
   return { status: "unavailable" };
 }
 
