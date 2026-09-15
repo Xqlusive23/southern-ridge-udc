@@ -12,7 +12,7 @@ export default async function AdminPreferencesPage() {
     <div className="admin-page max-w-3xl">
       <AdminPageHeader
         title="Preferences"
-        description="Manage public contact details, support email, transfer PIN policy, and desk defaults."
+        description="Manage public contact details, support email, transfer PIN policy, desk defaults, and your admin password."
       />
       <AdminCard>
         <AdminPreferencesForm settings={settings} mailReady={isMailConfigured(settings)} />

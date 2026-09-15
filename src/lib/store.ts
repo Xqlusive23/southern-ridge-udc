@@ -754,8 +754,29 @@ export function setMemberPassword(userId: string, password: string) {
   return withLock(() => {
     const store = readStore();
     const user = store.users.find((item) => item.id === userId);
-    if (!user) throw new Error("Member not found.");
+    if (!user) throw new Error("User not found.");
     user.passwordHash = hashPassword(password);
+    writeStore(store);
+  });
+}
+
+/** Change password for the signed-in user after verifying the current one. */
+export function changeOwnPassword(
+  userId: string,
+  currentPassword: string,
+  nextPassword: string,
+) {
+  return withLock(() => {
+    const store = readStore();
+    const user = store.users.find((item) => item.id === userId);
+    if (!user) throw new Error("User not found.");
+    if (!verifyPassword(currentPassword, user.passwordHash)) {
+      throw new Error("Current password is incorrect.");
+    }
+    if (nextPassword.length < 8) {
+      throw new Error("Choose a password with at least 8 characters.");
+    }
+    user.passwordHash = hashPassword(nextPassword);
     writeStore(store);
   });
 }

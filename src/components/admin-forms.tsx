@@ -34,6 +34,7 @@ import {
   adminUpdateMemberAction,
   adminSendTestEmailAction,
   adminUpdateSettingsAction,
+  adminChangePasswordAction,
 } from "@/lib/actions/admin";
 import { CONTACT_CHANNELS, STATEMENT_DELIVERY, contactChannelLabel } from "@/lib/contacts";
 import { LOAN_STATUSES, TRANSFER_STATUSES, transferKindLabel } from "@/lib/transfers";
@@ -646,6 +647,10 @@ export function AdminPreferencesForm({
 }) {
   const [state, action] = useActionState(adminUpdateSettingsAction, null);
   const [testState, testAction] = useActionState(adminSendTestEmailAction, null);
+  const [passwordState, passwordAction] = useActionState(
+    adminChangePasswordAction,
+    null,
+  );
   const [smartsuppKey, setSmartsuppKey] = useState(settings.smartsuppKey ?? "");
   const [mailFields, setMailFields] = useState({
     supportEmail: settings.supportEmail || settings.memberDeskEmail || "",
@@ -656,6 +661,7 @@ export function AdminPreferencesForm({
   });
   useToastResult(state);
   useToastResult(testState);
+  useToastResult(passwordState);
 
   useEffect(() => {
     setSmartsuppKey(settings.smartsuppKey ?? "");
@@ -924,6 +930,53 @@ export function AdminPreferencesForm({
       </div>
       <FormButton variant="outline" className="h-10 w-fit">
         Send test email
+      </FormButton>
+    </form>
+    <form action={passwordAction} className="grid gap-4 border-t pt-6 sm:max-w-md">
+      <div>
+        <h2 className="font-semibold text-[#0B2340]">Admin password</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Change the password for your operations console sign-in.
+        </p>
+      </div>
+      <StatusBanner error={passwordState?.error} />
+      <div className="grid gap-1.5">
+        <Label htmlFor="currentPassword">Current password</Label>
+        <Input
+          id="currentPassword"
+          name="currentPassword"
+          type="password"
+          autoComplete="current-password"
+          className="h-10"
+          required
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="newPassword">New password</Label>
+        <Input
+          id="newPassword"
+          name="newPassword"
+          type="password"
+          autoComplete="new-password"
+          className="h-10"
+          minLength={8}
+          required
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="confirmPassword">Confirm new password</Label>
+        <Input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          className="h-10"
+          minLength={8}
+          required
+        />
+      </div>
+      <FormButton className="h-10 w-fit bg-[#0B2340] text-white hover:bg-[#08182C]">
+        Update password
       </FormButton>
     </form>
     </div>

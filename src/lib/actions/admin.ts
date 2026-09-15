@@ -19,6 +19,7 @@ import {
   removeMemberContact,
   setMemberPassword,
   setMemberTransferPin,
+  changeOwnPassword,
   updateAccountStatus,
   updateLoan,
   updateMember,
@@ -497,6 +498,40 @@ export async function adminSendTestEmailAction(
     };
   }
   return { ok: true, message: `Test email sent to ${to}.` };
+}
+
+export async function adminChangePasswordAction(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { session, error } = await requireAdmin();
+  if (!session) return { ok: false, error: error ?? "Operations access required." };
+
+  const currentPassword = String(formData.get("currentPassword") ?? "");
+  const nextPassword = String(formData.get("newPassword") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  if (!currentPassword || !nextPassword || !confirmPassword) {
+    return { ok: false, error: "Fill in your current password and the new password twice." };
+  }
+  if (nextPassword !== confirmPassword) {
+    return { ok: false, error: "New password and confirmation do not match." };
+  }
+  if (nextPassword.length < 8) {
+    return { ok: false, error: "Choose a password with at least 8 characters." };
+  }
+
+  try {
+    await changeOwnPassword(session.id, currentPassword, nextPassword);
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not change your password.",
+    };
+  }
+
+  revalidatePath("/admin/preferences");
+  return { ok: true, message: "Admin password updated. Use it the next time you sign in." };
 }
 
 export async function adminDeleteMemberAction(
