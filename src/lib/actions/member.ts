@@ -30,6 +30,9 @@ import {
   isUsRoutingNumber,
 } from "@/lib/us-banks";
 
+// Keep this in sync with OTHER_BANK_VALUE in components/bank-fields.tsx
+const OTHER_BANK_VALUE = "__other__";
+
 function alphanumericOnly(value: string) {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
@@ -81,7 +84,12 @@ export async function transferAction(
   const pinCheck = requiredTransferPin(formData);
   if ("error" in pinCheck) return { ok: false, error: pinCheck.error };
   const recipientEmail = emailCheck.email;
-  const bankName = String(formData.get("bankName") ?? "").trim();
+
+  const bankSelection = String(formData.get("bankName") ?? "").trim();
+  const customBankName = String(formData.get("customBankName") ?? "").trim();
+  const isOtherBank = bankSelection === OTHER_BANK_VALUE;
+  const bankName = isOtherBank ? customBankName : bankSelection;
+
   const amountCents = parseMoneyToCents(String(formData.get("amount") ?? ""));
   const memo = String(formData.get("memo") ?? "");
 
@@ -101,7 +109,7 @@ export async function transferAction(
         error: "Account number must be 4–34 letters and/or numbers.",
       };
     }
-    if (!findUsBank(bankName)) {
+    if (!isOtherBank && !findUsBank(bankName)) {
       return { ok: false, error: "Choose a receiving bank from the list." };
     }
   }

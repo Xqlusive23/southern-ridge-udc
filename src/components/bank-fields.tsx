@@ -10,6 +10,8 @@ export type BankOption = {
   category: "home" | "prepaid" | "bank" | "credit_union";
 };
 
+export const OTHER_BANK_VALUE = "__other__";
+
 const CATEGORIES: { value: BankOption["category"]; label: string }[] = [
   { value: "home", label: "This credit union" },
   { value: "prepaid", label: "Prepaid banks" },
@@ -42,6 +44,7 @@ export function BankSelect({
 }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(value ?? "");
+  const [customBank, setCustomBank] = useState("");
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return banks;
@@ -51,6 +54,7 @@ export function BankSelect({
     );
   }, [banks, query]);
   const selectedBank = banks.find((bank) => bank.name === selected) ?? null;
+  const isOther = selected === OTHER_BANK_VALUE;
 
   return (
     <div className="grid gap-1.5">
@@ -72,11 +76,16 @@ export function BankSelect({
         onChange={(event) => {
           const next = event.target.value;
           setSelected(next);
-          onBankChange?.(banks.find((bank) => bank.name === next) ?? null);
+          if (next === OTHER_BANK_VALUE) {
+            onBankChange?.(null);
+          } else {
+            onBankChange?.(banks.find((bank) => bank.name === next) ?? null);
+          }
         }}
         className="h-10 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm"
       >
         <option value="">Select a bank</option>
+        <option value={OTHER_BANK_VALUE}>My bank isn’t listed</option>
         {CATEGORIES.map((category) => {
           const options = filtered.filter((bank) => bank.category === category.value);
           if (
@@ -98,6 +107,24 @@ export function BankSelect({
           );
         })}
       </select>
+      {isOther ? (
+        <div className="grid gap-1.5 pt-1">
+          <Label htmlFor={`${id}-custom`}>Bank name</Label>
+          <Input
+            id={`${id}-custom`}
+            name="customBankName"
+            value={customBank}
+            onChange={(event) => setCustomBank(event.target.value)}
+            placeholder="Enter your bank's name"
+            className="h-10"
+            autoComplete="off"
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            We’ll route this transfer using the name you enter here.
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
