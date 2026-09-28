@@ -30,6 +30,14 @@ import {
   isUsRoutingNumber,
 } from "@/lib/us-banks";
 
+function alphanumericOnly(value: string) {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function isAlphanumericAccountNumber(value: string) {
+  return /^[A-Z0-9]{4,34}$/.test(value);
+}
+
 function requiredRecipientEmail(formData: FormData) {
   const email = extractEmail(
     String(formData.get("recipientEmail") ?? formData.get("recipientDetails") ?? ""),
@@ -66,7 +74,7 @@ export async function transferAction(
   const fromAccountId = String(formData.get("fromAccountId") ?? "");
   const destination = String(formData.get("destination") ?? "other");
   const toAccountId = String(formData.get("toAccountId") ?? "");
-  const toAccountNumber = digitsOnly(String(formData.get("toAccountNumber") ?? ""));
+  const toAccountNumber = alphanumericOnly(String(formData.get("toAccountNumber") ?? ""));
   const recipientName = String(formData.get("recipientName") ?? "").trim();
   const emailCheck = requiredRecipientEmail(formData);
   if ("error" in emailCheck) return { ok: false, error: emailCheck.error };
@@ -87,10 +95,10 @@ export async function transferAction(
         error: "Enter the recipient’s name, bank, account number, and email.",
       };
     }
-    if (!isUsAccountNumber(toAccountNumber)) {
+    if (!isAlphanumericAccountNumber(toAccountNumber)) {
       return {
         ok: false,
-        error: "Account number must be 4–17 digits. Letters are not allowed.",
+        error: "Account number must be 4–34 letters and/or numbers.",
       };
     }
     if (!findUsBank(bankName)) {

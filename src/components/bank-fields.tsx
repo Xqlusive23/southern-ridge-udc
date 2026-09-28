@@ -21,6 +21,10 @@ function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
 }
 
+function alphanumericOnly(value: string) {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
 export function BankSelect({
   banks,
   id = "bankName",
@@ -118,20 +122,22 @@ export function AccountNumberField({
         id={id}
         name={name}
         value={value}
-        inputMode="numeric"
+        inputMode="text"
         autoComplete="off"
-        pattern="[0-9]{4,17}"
+        pattern="[A-Za-z0-9]{4,34}"
         minLength={4}
-        maxLength={17}
+        maxLength={34}
         className="h-10"
         required
-        onChange={(event) => setValue(digitsOnly(event.target.value))}
+        onChange={(event) => setValue(alphanumericOnly(event.target.value))}
         onPaste={(event) => {
           event.preventDefault();
-          setValue(digitsOnly(event.clipboardData.getData("text")));
+          setValue(alphanumericOnly(event.clipboardData.getData("text")));
         }}
       />
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? (
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      ) : null}
     </div>
   );
 }

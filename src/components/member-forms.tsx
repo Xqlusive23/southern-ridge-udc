@@ -139,7 +139,7 @@ export function TransferForm({
           <AccountNumberField
             id="toAccountNumber"
             name="toAccountNumber"
-            hint="text, 4–50 numbers. Letters are accepted."
+            hint="Letters and numbers only, 4–34 characters."
           />
         </>
       )}
